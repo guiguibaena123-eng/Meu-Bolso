@@ -710,7 +710,7 @@ function vMetas(c){
       <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
-    <p class="hint">Um aviso todo mês no último dia útil. Siga um passo de cada vez.</p>${remHtml()}</section>`;
+    <p class="hint">Crie um <b>lembrete</b> (no app Lembretes, não no Calendário) que toca todo mês no último dia útil. Siga um passo de cada vez.</p>${remHtml()}</section>`;
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
   h+=`<section class="card"><details id="dnames"${S.namesOpen?' open':''}><summary class="sum">Nomes das categorias</summary><p class="hint" style="margin:10px 0 8px">Renomeie qualquer categoria ou crie as suas. Apagar o nome volta ao original.</p>`+
@@ -1249,7 +1249,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 8</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 9</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1287,9 +1287,9 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='impfile'&&e.target.files&&e.target.files[0]){doImport(e.target.files[0]);e.target.value=''}});
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-/* lembrete mensal: assistente de um passo por vez para criar o evento no Calendário do iPhone */
+/* lembrete mensal: assistente de um passo por vez para criar o lembrete no app Lembretes do iPhone */
 let remStep=0;
-try{remStep=Math.max(0,Math.min(6,parseInt(sessionStorage.getItem('mbRem'),10)||0))}catch(e){}
+try{remStep=Math.max(0,Math.min(5,parseInt(sessionStorage.getItem('mbRem'),10)||0))}catch(e){}
 function remNextDate(){
   const now=new Date();let d=lastBiz(ymOf(now));
   if(new Date(d.getFullYear(),d.getMonth(),d.getDate(),9)<=now)d=lastBiz(shiftYm(ymOf(now),1));
@@ -1297,13 +1297,12 @@ function remNextDate(){
 }
 function remHtml(){
   const steps=[
-    {t:'Abra o Calendário',d:'Toque no <b>+</b>, no canto de cima à direita.'},
+    {t:'Abra o app Lembretes',d:'É o app <b>Lembretes</b>, não o Calendário. Toque em <b>Novo Lembrete</b>, no canto de baixo à esquerda.'},
     {t:'Escreva o título',big:'Fechar o mês no Meu Bolso',btn:['copytitle','Copiar título']},
-    {t:'Escolha o dia e a hora',big:esc(remNextDate())+' · 9:00',d:'Deixe <b>Dia inteiro</b> desligado.'},
-    {t:'Repita todo mês',d:'Toque em <b>Repetir</b>, depois em <b>Personalizar</b> e escolha <b>Mensalmente</b>.'},
-    {t:'Só no último dia útil',d:'Troque para <b>Todo mês no(a)</b>. Escolha <b>Último</b> e <b>Dia da semana</b>.'},
-    {t:'Ative o alerta',d:'Volte, toque em <b>Alerta</b> e escolha <b>Na hora do evento</b>.'},
-    {t:'Salve',d:'Toque em <b>Adicionar</b>, no canto de cima à direita.',last:true}
+    {t:'Escolha o dia e a hora',big:esc(remNextDate())+' · 9:00',d:'Toque no <b>ⓘ</b> ao lado do lembrete. Ligue <b>Data</b> e <b>Hora</b> e escolha os valores acima.'},
+    {t:'Repita todo mês',d:'Ainda no <b>ⓘ</b>, toque em <b>Repetir</b>, depois em <b>Personalizado</b> e escolha <b>Mensalmente</b>.'},
+    {t:'Só no último dia útil',d:'Escolha <b>Último</b> e <b>Dia da semana</b>. Se essa opção não aparecer, escolha <b>Último dia do mês</b>.'},
+    {t:'Salve',d:'Toque em <b>OK</b>, no canto de cima à direita. O lembrete toca todo mês.',last:true}
   ];
   const s=steps[remStep],n=steps.length;
   return `<div id="remwiz" class="wiz" role="group" aria-label="Passo ${remStep+1} de ${n}">
@@ -1323,10 +1322,10 @@ function remGo(i){
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
   const a=el.dataset.act;
-  if(a==='remnext'){if(remStep>=6){remGo(0);toast('Pronto! O iPhone vai te avisar todo mês.')}else remGo(remStep+1)}
+  if(a==='remnext'){if(remStep>=5){remGo(0);toast('Pronto! O lembrete vai tocar todo mês.')}else remGo(remStep+1)}
   else if(a==='remback')remGo(Math.max(0,remStep-1));
   else if(a==='copytitle'){
-    const ok=()=>toast('Título copiado. Cole no Calendário.'),fail=()=>toast('Não consegui copiar. Digite: Fechar o mês no Meu Bolso');
+    const ok=()=>toast('Título copiado. Cole no app Lembretes.'),fail=()=>toast('Não consegui copiar. Digite: Fechar o mês no Meu Bolso');
     try{navigator.clipboard.writeText('Fechar o mês no Meu Bolso').then(ok,fail)}catch(err){fail()}
   }
 });
