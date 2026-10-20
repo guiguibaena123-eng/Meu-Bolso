@@ -44,4 +44,3 @@ Se o `index.html` mudar, abra o arquivo `sw.js`, troque `meu-bolso-v1` por `meu-
 - `index.html`: o app
 - `sw.js`: guarda o app no aparelho para abrir offline
 - `manifest.webmanifest`, `icon-v2-192.png`, `icon-v2-512.png`, `apple-touch-icon-v2.png`: instalação e ícone
-- `fonts.css` e `fonts/`: as fontes, guardadas junto para não depender da internet

@@ -13,7 +13,6 @@
 <link rel="apple-touch-icon" href="apple-touch-icon-v2.png">
 <link rel="icon" type="image/png" href="icon-v2-192.png">
 <title>Meu Bolso</title>
-<link rel="stylesheet" href="fonts.css">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
 <style>
 /* Layout: app de uma coluna para celular. Cabeçalho fixo com o mês, conteúdo em cartões, barra de abas embaixo e botão flutuante "Registrar". */
@@ -259,6 +258,91 @@ input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width
   .fab{transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .25s ease}
 }
 .fab.away{transform:translateY(96px);opacity:0;pointer-events:none}
+
+/* ---------- polimento visual, inspirado nos apps do iOS ---------- */
+:root{
+  --font-display:ui-rounded,'SF Pro Rounded',-apple-system,BlinkMacSystemFont,system-ui,'Segoe UI',Roboto,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI',Roboto,sans-serif;
+  --glass:rgba(255,255,255,.74); --glass-line:rgba(18,32,28,.09); --bg-glass:rgba(235,240,238,.82); --fill:rgba(88,105,100,.12);
+  --shadow:0 1px 1px rgba(18,32,28,.04),0 8px 24px rgba(18,32,28,.06);
+  --barb:max(10px,calc(env(safe-area-inset-bottom,0px) - 8px)); --barh:68px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--glass:rgba(24,38,35,.72);--glass-line:rgba(255,255,255,.09);--bg-glass:rgba(11,20,18,.82);--fill:rgba(148,169,162,.16);--shadow:0 1px 1px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{--glass:rgba(24,38,35,.72);--glass-line:rgba(255,255,255,.09);--bg-glass:rgba(11,20,18,.82);--fill:rgba(148,169,162,.16);--shadow:0 1px 1px rgba(0,0,0,.3)}
+body{font-feature-settings:"tnum" 0;-webkit-font-smoothing:antialiased}
+.app{padding-bottom:calc(var(--barb) + var(--barh) + 96px)}
+h2,.sum,.dica h3,.shrow strong{letter-spacing:-.015em}
+
+/* cabeçalho de vidro: o conteúdo passa por trás com desfoque */
+.top{margin:0 -16px;padding:8px 16px 8px;background:var(--bg-glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
+  border-bottom:.5px solid transparent;transition:border-color .2s ease}
+.top.scrolled{border-bottom-color:var(--glass-line)}
+.top .mes{font-size:1.15rem;letter-spacing:-.015em}
+.nav{width:40px;height:40px;border:0;background:var(--fill);color:var(--ink);transition:transform .15s ease,background .2s ease}
+.nav:active{transform:scale(.9)}
+
+/* cartões e listas */
+.card{border-radius:22px;padding:18px 18px 20px}
+.lista{border-radius:20px}
+.item{border-top:0;position:relative}
+.item::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.item:first-child::before{display:none}
+.item>button{transition:background .15s ease}
+.item>button:active{background:var(--fill)}
+.track,.bar{height:10px;border-radius:5px}
+.track i{border-radius:5px}
+.chip{background:var(--fill);border:0;transition:transform .15s ease,background .2s ease}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.chip:active{transform:scale(.95)}
+
+/* resumo: cartão de destaque, como os resumos do app Saúde e Carteira */
+.hero{background:linear-gradient(155deg,#0B7A5E 0%,#07503C 100%);color:#fff;border-radius:26px;padding:20px 18px 18px;margin-top:6px;box-shadow:0 12px 30px rgba(7,80,60,.3)}
+.hero:has(.big.neg){background:linear-gradient(155deg,#B5402B 0%,#7E2417 100%);box-shadow:0 12px 30px rgba(126,36,23,.3)}
+.hero .ola{color:#fff;margin-bottom:12px}
+.hero .lbl{color:rgba(255,255,255,.78)}
+.hero .big,.hero .big.neg{color:#fff}
+.hero .io div{background:rgba(255,255,255,.16);box-shadow:none}
+.hero .io dt{color:rgba(255,255,255,.78)}
+.hero .io dd,.hero .pos{color:#fff!important}
+
+/* botões */
+.primary{border-radius:16px;min-height:52px;font-size:1rem;transition:transform .15s ease,opacity .2s ease}
+.primary:active{transform:scale(.97)}
+.ghost{background:var(--fill);border:0;border-radius:14px;transition:transform .15s ease}
+.ghost:active{transform:scale(.97)}
+.ghost.danger{background:var(--alert-bg);color:var(--alert-fg)}
+input[type=text],input[type=date],input[type=number],select{border:0;background:var(--fill);border-radius:14px}
+.seg{background:var(--fill)}
+
+/* barra de abas flutuante, de vidro */
+.tabs{left:12px;right:12px;bottom:var(--barb);padding:6px;gap:2px;border:.5px solid var(--glass-line);border-radius:32px;background:var(--glass);
+  -webkit-backdrop-filter:saturate(180%) blur(26px);backdrop-filter:saturate(180%) blur(26px);
+  box-shadow:0 12px 32px rgba(18,32,28,.18),0 1px 0 rgba(255,255,255,.45) inset}
+.tabs button{min-height:56px;border-radius:26px;font-size:.68rem}
+.tabind{border-radius:26px;background:rgba(11,122,94,.14)}
+.fab{right:16px;bottom:calc(var(--barb) + var(--barh) + 14px);height:56px;padding:0 22px 0 18px;font-size:1rem;
+  box-shadow:0 10px 26px rgba(11,122,94,.38),0 2px 6px rgba(0,0,0,.12)}
+.fab:active{transform:scale(.95)}
+.fab.away{transform:translateY(calc(var(--barh) + 120px))}
+#toast{bottom:calc(var(--barb) + var(--barh) + 84px);border-radius:16px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+
+/* folha de lançamento */
+.sheet{border-radius:30px 30px 0 0}
+.scrim{-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.shead{border-bottom:0}
+.sfoot{border-top:.5px solid var(--glass-line)}
+
+@media (min-width:600px){
+  .tabs{left:50%;right:auto;width:min(460px,calc(100% - 24px));transform:translateX(-50%);border:.5px solid var(--glass-line);border-radius:32px}
+  .fab{right:max(16px,calc((100vw - 640px)/2 + 16px))}
+}
+@media (min-width:900px){.fab{right:max(16px,calc((100vw - 900px)/2 + 16px))}}
+@media (max-height:500px){
+  .tabs button{min-height:42px}
+  .fab{height:48px;bottom:calc(var(--barb) + 62px)}
+  .app{padding-bottom:calc(var(--barb) + 130px)}
+}
+@media (prefers-reduced-motion:reduce){.nav,.chip,.primary,.ghost,.fab{transition:none}}
 </style>
 
 </head>
@@ -830,9 +914,26 @@ function slideMain(cls){const m=$('#main');m.classList.remove('go-l','go-r');voi
     if(tick)return;tick=true;
     requestAnimationFrame(()=>{
       tick=false;const y=window.scrollY,d=y-last,fab=$('.fab');
+      $('.top').classList.toggle('scrolled',y>4);
       if(Math.abs(d)>6){fab.classList.toggle('away',d>0&&y>80);last=y}
       else if(y<=80)fab.classList.remove('away');
     });
+  },{passive:true});
+})();
+/* deslizar para o lado troca de aba, como nos apps do iOS */
+(function(){
+  let x0=0,y0=0,t0=0,ok=false;
+  const bad=t=>t.closest&&t.closest('input,select,textarea,summary,.sheet,#sheet,.tabs');
+  document.addEventListener('touchstart',e=>{
+    const t=e.touches[0];ok=e.touches.length===1&&!bad(e.target)&&$('#sheet').hidden&&!document.body.classList.contains('welcome')&&t.clientX>24&&t.clientX<window.innerWidth-24;
+    x0=t.clientX;y0=t.clientY;t0=e.timeStamp;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!ok)return;ok=false;
+    const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
+    if(Math.abs(dx)<80||Math.abs(dy)>50||Math.abs(dx)<Math.abs(dy)*2.5||e.timeStamp-t0>600)return;
+    const i=TABS.indexOf(S.tab),n=dx<0?i+1:i-1;
+    if(n>=0&&n<TABS.length)goTab(TABS[n]);
   },{passive:true});
 })();
 window.addEventListener('online',()=>{if(S.db)flush()});
@@ -1255,7 +1356,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 11</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 12</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
