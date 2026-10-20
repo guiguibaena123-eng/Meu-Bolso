@@ -710,7 +710,12 @@ function vMetas(c){
       <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
-    <p class="hint">Crie um <b>lembrete</b> (no app Lembretes, não no Calendário) que toca todo mês no último dia útil. Siga um passo de cada vez.</p>${remHtml()}</section>`;
+    <p class="hint">Um aviso todo mês no <b>último dia útil</b>, às 9h. Toque no botão e o iPhone abre o Calendário para adicionar.</p>
+    <a class="primary full" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="${remWebcal()}">Adicionar ao Calendário</a>
+    <p class="hint" style="margin-top:8px">Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b>. O aviso toca na hora marcada, todo mês.</p>
+    <div class="acts2" style="margin-top:8px"><button class="ghost" data-act="copyics">Copiar link para colar em outro lugar</button></div>
+    <details style="margin-top:12px"><summary class="sum">Prefere fazer à mão no app Lembretes?</summary>
+    <p class="hint" style="margin-top:8px">Crie um <b>lembrete</b> (no app Lembretes, não no Calendário), um passo de cada vez.</p>${remHtml()}</details></section>`;
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
   h+=`<section class="card"><details id="dnames"${S.namesOpen?' open':''}><summary class="sum">Nomes das categorias</summary><p class="hint" style="margin:10px 0 8px">Renomeie qualquer categoria ou crie as suas. Apagar o nome volta ao original.</p>`+
@@ -1249,7 +1254,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 9</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 10</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1289,6 +1294,8 @@ if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWo
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 /* lembrete mensal: assistente de um passo por vez para criar o lembrete no app Lembretes do iPhone */
 let remStep=0;
+const remIcsUrl=()=>new URL('lembrete.ics',APP_URL).href;
+const remWebcal=()=>remIcsUrl().replace(/^https?:/,'webcal:');
 try{remStep=Math.max(0,Math.min(5,parseInt(sessionStorage.getItem('mbRem'),10)||0))}catch(e){}
 function remNextDate(){
   const now=new Date();let d=lastBiz(ymOf(now));
@@ -1324,6 +1331,10 @@ document.addEventListener('click',e=>{
   const a=el.dataset.act;
   if(a==='remnext'){if(remStep>=5){remGo(0);toast('Pronto! O lembrete vai tocar todo mês.')}else remGo(remStep+1)}
   else if(a==='remback')remGo(Math.max(0,remStep-1));
+  else if(a==='copyics'){
+    const ok=()=>toast('Link copiado. Cole no Safari, no Notas ou em uma mensagem para você.'),fail=()=>toast('Não consegui copiar o link.');
+    try{navigator.clipboard.writeText(remIcsUrl()).then(ok,fail)}catch(err){fail()}
+  }
   else if(a==='copytitle'){
     const ok=()=>toast('Título copiado. Cole no app Lembretes.'),fail=()=>toast('Não consegui copiar. Digite: Fechar o mês no Meu Bolso');
     try{navigator.clipboard.writeText('Fechar o mês no Meu Bolso').then(ok,fail)}catch(err){fail()}
