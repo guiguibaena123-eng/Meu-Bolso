@@ -76,7 +76,7 @@ p{margin:0}
 .io dt{font-size:.78rem;color:var(--muted);font-weight:500}
 .io dd{margin:2px 0 0;font-weight:600;font-size:clamp(.9rem,4.2vw,1.1rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 @media (max-width:359px){.io{grid-template-columns:1fr}.io div[style]{grid-column:auto!important}}
-.pos{color:var(--accent)}
+.pos{color:var(--pos,var(--accent))}
 .aviso{margin-top:12px;font-size:.85rem;color:var(--info-fg);background:var(--info-bg);border-radius:12px;padding:10px 12px}
 .vazio{text-align:left}
 .vazio p{color:var(--muted);margin-bottom:14px}
@@ -126,7 +126,7 @@ p{margin:0}
 .item .t b{display:block;font-weight:600;overflow-wrap:anywhere}
 .item .t small{color:var(--muted)}
 .item .v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center}
-.item .v.in{color:var(--accent)}
+.item .v.in{color:var(--pos,var(--accent))}
 .item .v.inv{color:var(--need)}.item .acts{padding:0 16px 14px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .sum{font-family:var(--font-display);font-weight:700;font-size:1.05rem;letter-spacing:-.01em;cursor:pointer;min-height:32px;display:flex;align-items:center;justify-content:space-between;list-style:none}
 .sum::-webkit-details-marker{display:none}
@@ -170,7 +170,7 @@ input.moeda{text-align:right}
 
 /* barra de abas e botão flutuante */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
-  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
   padding:6px max(10px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-right,0px))}
 .tabs button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:12px;color:var(--muted);font-size:.72rem;font-weight:500;min-height:52px}
 .tabs button svg{width:24px;height:24px;position:relative;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
@@ -296,7 +296,7 @@ h2,.sum,.dica h3,.shrow strong{letter-spacing:-.015em}
 .chip:active{transform:scale(.95)}
 
 /* resumo: cartão de destaque, como os resumos do app Saúde e Carteira */
-.hero{background:linear-gradient(155deg,#0B7A5E 0%,#07503C 100%);color:#fff;border-radius:26px;padding:20px 18px 18px;margin-top:6px;box-shadow:0 12px 30px rgba(7,80,60,.3)}
+.hero{background:linear-gradient(155deg,var(--hero-a,#0B7A5E) 0%,var(--hero-b,#07503C) 100%);color:#fff;border-radius:26px;padding:20px 18px 18px;margin-top:6px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
 .hero:has(.big.neg){background:linear-gradient(155deg,#B5402B 0%,#7E2417 100%);box-shadow:0 12px 30px rgba(126,36,23,.3)}
 .hero .ola{color:#fff;margin-bottom:12px}
 .hero .lbl{color:rgba(255,255,255,.78)}
@@ -319,9 +319,9 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
   -webkit-backdrop-filter:saturate(180%) blur(26px);backdrop-filter:saturate(180%) blur(26px);
   box-shadow:0 12px 32px rgba(18,32,28,.18),0 1px 0 rgba(255,255,255,.45) inset}
 .tabs button{min-height:56px;border-radius:26px;font-size:.68rem}
-.tabind{border-radius:26px;background:rgba(11,122,94,.14)}
+.tabind{border-radius:26px;background:var(--accent-soft,rgba(11,122,94,.14))}
 .fab{right:16px;bottom:calc(var(--barb) + var(--barh) + 14px);height:56px;padding:0 22px 0 18px;font-size:1rem;
-  box-shadow:0 10px 26px rgba(11,122,94,.38),0 2px 6px rgba(0,0,0,.12)}
+  box-shadow:0 10px 26px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.12)}
 .fab:active{transform:scale(.95)}
 .fab.away{transform:translateY(calc(var(--barh) + 120px))}
 #toast{bottom:calc(var(--barb) + var(--barh) + 84px);border-radius:16px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
@@ -332,6 +332,22 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .shead{border-bottom:0}
 .sfoot{border-top:.5px solid var(--glass-line)}
 
+/* cor de destaque escolhida em Ajustes */
+:root{--pos:#0B7A5E}
+:root[data-theme="dark"]{--pos:#3CC99A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pos:#3CC99A}}
+:root[data-accent="blue"]{--accent:#1F6FB2;--accent-ink:#fff;--hero-a:#1F6FB2;--hero-b:#124B7C;--accent-soft:rgba(31,111,178,.14)}
+:root[data-accent="blue"][data-theme="dark"]{--accent:#66B2F0;--accent-ink:#06213A;--accent-soft:rgba(102,178,240,.2)}
+:root[data-accent="purple"]{--accent:#6B4FBB;--accent-ink:#fff;--hero-a:#6B4FBB;--hero-b:#43307A;--accent-soft:rgba(107,79,187,.14)}
+:root[data-accent="purple"][data-theme="dark"]{--accent:#B39DFA;--accent-ink:#1E1240;--accent-soft:rgba(179,157,250,.2)}
+:root[data-accent="orange"]{--accent:#C4570F;--accent-ink:#fff;--hero-a:#C4570F;--hero-b:#8A3A06;--accent-soft:rgba(196,87,15,.14)}
+:root[data-accent="orange"][data-theme="dark"]{--accent:#FFA463;--accent-ink:#3A1A02;--accent-soft:rgba(255,164,99,.2)}
+:root[data-theme="dark"]{--accent-soft:rgba(60,201,154,.18)}
+.lbl2{font-size:.82rem;color:var(--muted);font-weight:600;margin:12px 0 8px}
+.swatches{display:flex;gap:16px;flex-wrap:wrap;padding:4px 4px 2px}
+.sw{position:relative;width:44px;height:44px;border-radius:50%;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transition:transform .15s ease}
+.sw:active{transform:scale(.92)}
+.sw[aria-pressed="true"]::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2.5px solid var(--ink)}
 @media (min-width:600px){
   .tabs{left:50%;right:auto;width:min(460px,calc(100% - 24px));transform:translateX(-50%);border:.5px solid var(--glass-line);border-radius:32px}
   .fab{right:max(16px,calc((100vw - 640px)/2 + 16px))}
@@ -365,6 +381,7 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
   <button data-tab="extrato"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Extrato</button>
   <button data-tab="metas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Metas</button>
   <button data-tab="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.7.6 1 1.3 1 2.1h5c0-.8.3-1.5 1-2.1A6 6 0 0 0 12 3z"/></svg>Dicas</button>
+  <button data-tab="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>Ajustes</button>
 </nav>
 
 <div id="sheet" hidden>
@@ -780,8 +797,7 @@ function vExtrato(){
 
 function vMetas(c){
   const goal=c.inc*S.cfg.savePct/100;
-  let h=`<section class="card"><h2>Seu nome</h2><input id="nomeinp" type="text" maxlength="30" value="${esc(S.cfg.name)}" autocomplete="given-name" aria-label="Seu nome"></section>
-    <section class="card"><h2>Quanto guardar por mês</h2>
+  let h=`<section class="card"><h2>Quanto guardar por mês</h2>
     <p style="font-size:1.8rem;font-family:var(--font-display);font-weight:700;letter-spacing:-.02em"><span id="pctv">${S.cfg.savePct}</span>% da renda</p>
     <input class="slider" id="sl" type="range" min="0" max="50" step="5" value="${S.cfg.savePct}" aria-label="Percentual da renda a guardar">
     <p class="hint" id="pcth">${c.inc>0?`Em ${esc(monthLabel().toLowerCase())}, isso são ${brl(goal)}.`:'Registre sua renda do mês para ver o valor em reais.'}</p>
@@ -792,6 +808,20 @@ function vMetas(c){
     return `<div class="lim"><div class="n"><b style="font-weight:600">${esc(k.n)}</b><small>gasto: ${brl(v)}${lim?` · restam ${lim-v>=0?brl(lim-v):'0,00 (passou '+brl(v-lim)+')'}`:''}</small>
       ${lim?`<div class="track"><i class="${v>lim?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></div>`:''}</div>
       <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
+  return h;
+}
+
+/* ---------- ajustes: aparência, dados e tudo que é operacional ---------- */
+const LOOKS={green:['Verde','#0B7A5E'],blue:['Azul','#1F6FB2'],purple:['Roxo','#6B4FBB'],orange:['Laranja','#C4570F']};
+function vAjustes(c){
+  const th=S.cfg.theme||'auto',ac=S.cfg.accent||'green';
+  let h=`<section class="card"><h2>Aparência</h2>
+    <p class="lbl2">Tema</p>
+    <div class="seg" role="group" aria-label="Tema">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([v,n])=>`<button type="button" data-act="theme" data-v="${v}" aria-pressed="${th===v}">${n}</button>`).join('')}</div>
+    <p class="hint" style="margin-top:8px">Automático segue o claro e o escuro do iPhone.</p>
+    <p class="lbl2" style="margin-top:16px">Cor de destaque</p>
+    <div class="swatches" role="group" aria-label="Cor de destaque">${Object.entries(LOOKS).map(([k,[n,col]])=>`<button type="button" class="sw" data-act="accent" data-v="${k}" style="background:${col}" aria-label="${n}" aria-pressed="${ac===k}"></button>`).join('')}</div></section>
+    <section class="card"><h2>Seu nome</h2><input id="nomeinp" type="text" maxlength="30" value="${esc(S.cfg.name)}" autocomplete="given-name" aria-label="Seu nome"></section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
     <p class="hint">Um aviso todo mês no <b>último dia útil</b>, às 9h. Toque no botão e o iPhone abre o Calendário para adicionar.</p>
@@ -875,7 +905,9 @@ function vDicas(c,p){
 /* ---------- render ---------- */
 const monthLabel=()=>{const [y,m]=S.ym.split('-').map(Number);return cap(new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}))};
 function render(){
-  $('#mes').textContent=monthLabel();
+  $('#mes').textContent=S.tab==='ajustes'?'Ajustes':monthLabel();
+  document.querySelectorAll('.nav').forEach(b=>{b.style.visibility=S.tab==='ajustes'?'hidden':''});
+  lookSync();
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
   placeInd();
   const main=$('#main');
@@ -886,12 +918,12 @@ function render(){
   if(S.pendRem){main.innerHTML=vRemind();return}
   if(!S.loaded||!S.cfgLoaded){main.innerHTML='<p class="hint" style="padding:40px 4px">Carregando seus lançamentos…</p>';return}
   const c=calc(S.tx),p=calc(S.prevTx);
-  main.innerHTML=S.tab==='resumo'?vResumo(c,p):S.tab==='extrato'?vExtrato():S.tab==='metas'?vMetas(c):vDicas(c,p);
+  main.innerHTML=S.tab==='resumo'?vResumo(c,p):S.tab==='extrato'?vExtrato():S.tab==='metas'?vMetas(c):S.tab==='ajustes'?vAjustes(c):vDicas(c,p);
   $('.fab').hidden=false;
 }
 
 /* ---------- abas: pílula deslizante e transição do conteúdo ---------- */
-const TABS=['resumo','extrato','metas','dicas'];
+const TABS=['resumo','extrato','metas','dicas','ajustes'];
 function placeInd(){
   const ind=$('#tabind'),b=document.querySelector('.tabs button[aria-current="page"]');
   if(!ind||!b||!b.offsetWidth)return;
@@ -1222,7 +1254,7 @@ document.addEventListener('click',e=>{
   }
   else if(a==='wipeall'){
     if(S.db&&(S.offline||!navigator.onLine)){S.confirm=null;render();toast('Para apagar tudo da sua conta, conecte-se à internet.');return}
-    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name;loadCfg(null);S.cfg={...S.cfg,name:nome};S.tab='resumo';
+    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
     if(S.db){
       const base='data/users/'+S.uid,pre='mbc:'+S.uid+':';
       try{Object.keys(localStorage).filter(k=>k.startsWith(pre)).forEach(k=>localStorage.removeItem(k))}catch(err){}
@@ -1232,6 +1264,9 @@ document.addEventListener('click',e=>{
   }
   else if(a==='undo'){if(S.undoFn){const f=S.undoFn;S.undoFn=null;f();$('#toast').hidden=true}else if(S.undo){S.tx=[...S.tx,S.undo];S.undo=null;saveMonth();render();$('#toast').hidden=true}}
   else if(a==='ai')askAI();
+  else if(a==='theme'||a==='accent'){
+    S.cfg={...S.cfg,[a==='theme'?'theme':'accent']:el.dataset.v};saveCfg();render();
+  }
   else if(a==='copyurl'){
     const ok=()=>toast('Link copiado.'),fail=()=>toast('Não consegui copiar. Segure o endereço no Safari para copiar.');
     try{navigator.clipboard.writeText(APP_URL).then(ok,fail)}catch(err){fail()}
@@ -1299,10 +1334,25 @@ document.addEventListener('change',e=>{
 });
 
 /* ---------- início ---------- */
+/* tema (automático, claro, escuro) e cor de destaque */
+const lookMQ=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function lookSync(){
+  const t=S.cfg.theme||'auto',a=S.cfg.accent||'green';
+  const eff=t==='auto'?(lookMQ&&lookMQ.matches?'dark':'light'):t,r=document.documentElement;
+  if(r.dataset.theme!==eff)r.dataset.theme=eff;
+  if(r.dataset.accent!==a)r.dataset.accent=a;
+  try{localStorage.setItem('mbLook',JSON.stringify({t,a}))}catch(e){}
+}
+(function(){
+  try{const o=JSON.parse(localStorage.getItem('mbLook'));
+    if(o){const r=document.documentElement;r.dataset.theme=o.t==='auto'?(lookMQ&&lookMQ.matches?'dark':'light'):(o.t==='dark'?'dark':'light');r.dataset.accent=o.a||'green'}}catch(e){}
+  if(lookMQ&&lookMQ.addEventListener)lookMQ.addEventListener('change',()=>{if((S.cfg.theme||'auto')==='auto')lookSync()});
+})();
 function loadCfg(raw){
   const d=raw||{};
   S.cfg={savePct:Number.isFinite(d.savePct)?d.savePct:20,limits:d.limits&&typeof d.limits==='object'?d.limits:{},
-    names:d.names&&typeof d.names==='object'?d.names:{},custom:Array.isArray(d.custom)?d.custom:[],name:typeof d.name==='string'?d.name.slice(0,30):'',recs:Array.isArray(d.recs)?d.recs:[]};
+    names:d.names&&typeof d.names==='object'?d.names:{},custom:Array.isArray(d.custom)?d.custom:[],name:typeof d.name==='string'?d.name.slice(0,30):'',recs:Array.isArray(d.recs)?d.recs:[],
+    theme:['auto','light','dark'].includes(d.theme)?d.theme:'auto',accent:['green','blue','purple','orange'].includes(d.accent)?d.accent:'green'};
 }
 async function start(){
   render();
@@ -1356,7 +1406,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 12</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 13</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1451,7 +1501,7 @@ function vRemind(){
     <a class="primary full" style="display:block;text-align:center;text-decoration:none;margin-top:18px" href="${remWebcal()}">Ativar lembrete</a>
     <p class="hint" style="margin-top:10px">Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b> e depois volte aqui pelo ícone do app.</p>
     <button class="ghost" type="button" data-act="remdone" style="margin-top:14px;width:100%">Continuar</button>
-    <p class="hint" style="margin-top:8px">Você também pode ativar depois, em Metas.</p></section>`;
+    <p class="hint" style="margin-top:8px">Você também pode ativar depois, em Ajustes.</p></section>`;
 }
 document.addEventListener('click',e=>{
   if(!e.target.closest('[data-act=remdone]'))return;

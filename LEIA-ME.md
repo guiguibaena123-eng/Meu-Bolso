@@ -31,7 +31,7 @@ Registre seus dados **depois de instalar**, abrindo sempre pelo ícone. No iPhon
 ## 3. Seus dados e o backup
 
 - Tudo fica guardado no iPhone. Se você apagar o ícone ou limpar os dados do Safari, perde tudo.
-- Em **Metas > Backup dos dados**, use **Salvar backup** de vez em quando e guarde o arquivo no app Arquivos ou no iCloud Drive.
+- Em **Ajustes > Backup dos dados**, use **Salvar backup** de vez em quando e guarde o arquivo no app Arquivos ou no iCloud Drive.
 - **Restaurar backup** traz tudo de volta e tem **Desfazer** logo depois.
 - Esta versão não sincroniza com a versão do claude.ai. Os dados de cada uma são separados.
 
