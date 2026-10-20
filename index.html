@@ -354,6 +354,45 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .sw{position:relative;width:44px;height:44px;border-radius:50%;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transition:transform .15s ease}
 .sw:active{transform:scale(.92)}
 .sw[aria-pressed="true"]::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2.5px solid var(--ink)}
+/* mês do cabeçalho abre a visão do ano */
+#mes{background:none;border:0;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:14px;transition:background .15s ease,transform .15s ease}
+#mes:active{background:var(--fill);transform:scale(.97)}
+#mes::after{content:"";width:7px;height:7px;border-right:2.2px solid var(--muted);border-bottom:2.2px solid var(--muted);transform:rotate(45deg) translateY(-2px)}
+#mes.plain{pointer-events:none}#mes.plain::after{display:none}
+.yearv{position:fixed;inset:0;z-index:25;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-left,0px)) calc(32px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+.yearv[hidden]{display:none}
+.yin{max-width:560px;margin:0 auto}
+.ytop{position:sticky;top:calc(0px - env(safe-area-inset-top,0px));z-index:2;margin:0 -16px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg-glass);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px}
+.ytop .xbtn{margin:0;background:var(--fill);color:var(--ink)}
+.ytop strong{font-family:var(--font-display);font-size:1.6rem;letter-spacing:-.02em;text-align:center}
+.ynav{display:flex;gap:8px}
+.ylist{display:grid;gap:10px;margin-top:14px}
+.yrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;background:var(--surface);border-radius:20px;padding:14px 16px 16px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease}
+.yrow:active{transform:scale(.98)}
+.yrow:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.yrow.now{box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
+.yrow.fut{background:transparent;box-shadow:none;border:1.5px dashed rgba(128,150,144,.55);padding:12.5px 14.5px 14.5px}
+.yrow.empty{padding:12px 16px;box-shadow:none;background:var(--fill)}
+.yrow.empty.fut{background:transparent;padding:10.5px 14.5px}
+.yrow.empty .ym small{display:none}
+.ym b{display:block;font-size:1.05rem;font-weight:700}
+.ym small{display:block;color:var(--muted);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;min-height:1em}
+.yv{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;font-size:1.05rem}
+.yv small{display:block;color:var(--muted);font-weight:500;font-size:.72rem}
+.yv.pos{color:var(--pos)}.yv.neg{color:var(--out)}.yv.muted{color:var(--muted);font-weight:500;font-size:.88rem}
+.ysub{grid-column:1/-1;color:var(--muted);font-size:.82rem;margin-top:8px;overflow-wrap:anywhere}
+.ytrack{grid-column:1/-1;height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.ytrack i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.ytrack i.over{background:var(--out)}
+.ytip{margin-bottom:12px}.ytip b{display:block;margin-bottom:2px}
+@keyframes yearIn{from{transform:translateY(100%)}to{transform:none}}
+@keyframes yearOut{from{transform:none}to{transform:translateY(100%)}}
+@media (prefers-reduced-motion:no-preference){
+  .yearv{animation:yearIn .42s cubic-bezier(.22,1,.36,1)}
+  .yearv.out{animation:yearOut .26s cubic-bezier(.5,0,.9,.5) forwards}
+}
 @media (min-width:600px){
   .tabs{left:50%;right:auto;width:min(460px,calc(100% - 24px));transform:translateX(-50%);border:.5px solid var(--glass-line);border-radius:32px}
   .fab{right:max(16px,calc((100vw - 640px)/2 + 16px))}
@@ -372,7 +411,7 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 <div class="app">
   <header class="top">
     <button class="nav" data-act="prev" aria-label="Mês anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <div class="mes" id="mes" aria-live="polite"></div>
+    <button type="button" class="mes" id="mes" data-act="year" aria-label="Ver o ano inteiro"></button>
     <button class="nav" data-act="next" aria-label="Próximo mês"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
   </header>
   <div class="netbar" id="netbar" role="status" hidden>Sem conexão. Pode continuar usando: tudo fica salvo neste aparelho e sobe para a sua conta quando a internet voltar.</div>
@@ -389,6 +428,20 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
   <button data-tab="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.7.6 1 1.3 1 2.1h5c0-.8.3-1.5 1-2.1A6 6 0 0 0 12 3z"/></svg>Dicas</button>
   <button data-tab="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>Ajustes</button>
 </nav>
+
+<div id="year" class="yearv" hidden role="dialog" aria-modal="true" aria-label="Resumo do ano">
+  <div class="yin">
+    <div class="ytop">
+      <button type="button" class="xbtn" data-act="yclose" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <strong id="ytitle" aria-live="polite"></strong>
+      <div class="ynav">
+        <button type="button" class="nav" data-act="yprev" aria-label="Ano anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" class="nav" data-act="ynext" aria-label="Próximo ano"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+    <div id="ybody"></div>
+  </div>
+</div>
 
 <div id="sheet" hidden>
   <div class="scrim" data-act="close"></div>
@@ -715,6 +768,66 @@ function vPrev(c,p){
   return h;
 }
 
+/* ---------- visão do ano: meses já vividos e previsão dos próximos ---------- */
+let yTok=0;
+async function yearData(y){
+  const cur=ymOf(new Date()),base=[shiftYm(cur,-2),shiftYm(cur,-1),cur];
+  const yms=Array.from({length:12},(_,i)=>y+'-'+pad(i+1)),got={};
+  await Promise.all([...new Set([...yms,...base])].map(async ym=>{got[ym]=ym===S.ym?S.tx:await loadMonth(ym)}));
+  const exSem=tx=>tx.filter(t=>t.t==='e'&&!t.grp).reduce((s,t)=>s+t.v,0);
+  const avg=a=>a.length?a.reduce((x,v)=>x+v,0)/a.length:0;
+  const withData=base.map(ym=>got[ym]).filter(tx=>tx.length);
+  const renda=avg(withData.map(tx=>calc(tx).inc).filter(v=>v>0)),varExp=avg(withData.map(exSem));
+  return yms.map(ym=>{
+    const tx=ym>cur?recFill(ym,got[ym]).tx:got[ym],c=calc(tx);
+    if(ym<=cur)return {ym,real:true,empty:!tx.length,inc:c.inc,exp:c.exp,inv:c.inv,bal:c.bal,sched:0};
+    const sched=tx.filter(t=>t.t==='e'&&t.grp).reduce((s,t)=>s+t.v,0),inc=c.inc>0?c.inc:renda,exp=sched+Math.max(varExp,exSem(tx));
+    return {ym,real:false,empty:!(inc||exp||c.inv),inc,exp,inv:c.inv,bal:inc-exp-c.inv,sched};
+  });
+}
+function yearHtml(y,rows){
+  const cur=ymOf(new Date()),have=rows.filter(r=>!r.empty),T=k=>have.reduce((s,r)=>s+r[k],0);
+  const fut=rows.filter(r=>!r.real&&!r.empty);
+  let h=`<section class="hero"><p class="lbl">Saldo de ${y}${fut.length?' (com previsão)':''}</p><p class="big ${T('bal')<0?'neg':''}">${brl(T('bal'))}</p>
+    <dl class="io"><div><dt>Entradas</dt><dd>${brl(T('inc'))}</dd></div><div><dt>Saídas</dt><dd>${brl(T('exp'))}</dd></div>${T('inv')>0?`<div style="grid-column:1/-1"><dt>Investido</dt><dd>${brl(T('inv'))}</dd></div>`:''}</dl></section>`;
+  if(fut.length){
+    const worst=fut.reduce((a,b)=>b.bal<a.bal?b:a),best=fut.reduce((a,b)=>b.bal>a.bal?b:a),sched=fut.reduce((s,r)=>s+r.sched,0),L=[];
+    if(worst.bal<0)L.push([`${mName(worst.ym)} deve fechar no vermelho`,`Faltariam ${brl(-worst.bal)}. Vale ajustar gastos ou a meta antes desse mês chegar.`]);
+    else if(fut.length>1)L.push([`${mName(worst.ym)} será o mês mais apertado`,`Sobram ${brl(worst.bal)} nele, contra ${brl(best.bal)} em ${mName(best.ym)}.`]);
+    if(sched>0)L.push([`${brl(sched)} já estão comprometidos`,'É a soma das parcelas e assinaturas já agendadas para os meses que faltam neste ano.']);
+    h+=`<section class="card"><h2>Olhando para frente</h2>${L.map(([t,b])=>`<div class="ytip"><b>${esc(t)}</b><p class="hint">${esc(b)}</p></div>`).join('')}<p class="hint" style="font-size:.82rem">Os meses "previstos" usam a média de renda e gastos dos seus últimos meses, mais as parcelas e assinaturas já agendadas.</p></section>`;
+  }
+  h+=`<div class="ylist">`+rows.map(r=>{
+    const isCur=r.ym===cur,ratio=r.inc>0?Math.min(100,pct(r.exp+r.inv,r.inc)):(r.exp>0?100:0);
+    return `<button type="button" class="yrow${isCur?' now':''}${r.real?'':' fut'}${r.empty?' empty':''}" data-act="ygo" data-ym="${r.ym}">
+      <span class="ym"><b>${esc(mName(r.ym))}</b><small>${isCur?'Mês atual':r.real?'&nbsp;':'Previsto'}</small></span>
+      ${r.empty?`<span class="yv muted">${r.real?'Sem registros':'Sem dados ainda'}</span>`
+        :`<span class="yv ${r.bal<0?'neg':'pos'}">${r.bal<0?'−':''}${brl(Math.abs(r.bal))}<small>${r.bal<0?'faltou':'sobra'}</small></span>
+      <span class="ysub">Entrou ${brl(r.inc)} · Saiu ${brl(r.exp)}${r.inv>0?` · Investiu ${brl(r.inv)}`:''}</span>
+      <span class="ytrack"><i class="${r.bal<0?'over':''}" style="width:${ratio}%"></i></span>`}
+    </button>`}).join('')+`</div>`;
+  return h;
+}
+function openYear(){
+  S.year=+S.ym.slice(0,4);
+  const v=$('#year');v.hidden=false;v.classList.remove('out');v.scrollTop=0;
+  document.documentElement.classList.add('lock');
+  paintYear();
+  setTimeout(()=>{const x=v.querySelector('.xbtn');if(x)x.focus({preventScroll:true})},60);
+}
+async function paintYear(){
+  const y=S.year,tok=++yTok;$('#ytitle').textContent=y;
+  $('#ybody').innerHTML='<p class="hint" style="padding:30px 4px">Carregando o ano…</p>';
+  try{const rows=await yearData(y);if(tok===yTok)$('#ybody').innerHTML=yearHtml(y,rows)}
+  catch(e){if(tok===yTok)$('#ybody').innerHTML='<p class="hint" style="padding:30px 4px">Não consegui carregar o ano agora. Tente de novo.</p>'}
+}
+function closeYear(){
+  const v=$('#year');if(v.hidden)return;yTok++;
+  const done=()=>{v.hidden=true;v.classList.remove('out');if($('#sheet').hidden)document.documentElement.classList.remove('lock')};
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches){done();return}
+  v.classList.add('out');setTimeout(done,260);
+}
+
 /* ---------- boas-vindas ---------- */
 const saud=()=>{const h=new Date().getHours();return h>=5&&h<12?'Bom dia':h>=12&&h<18?'Boa tarde':'Boa noite'};
 function vWelcome(){
@@ -912,6 +1025,7 @@ function vDicas(c,p){
 const monthLabel=()=>{const [y,m]=S.ym.split('-').map(Number);return cap(new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}))};
 function render(){
   $('#mes').textContent=S.tab==='ajustes'?'Ajustes':monthLabel();
+  $('#mes').classList.toggle('plain',S.tab==='ajustes');
   document.querySelectorAll('.nav').forEach(b=>{b.style.visibility=S.tab==='ajustes'?'hidden':''});
   lookSync();
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
@@ -963,7 +1077,7 @@ function slideMain(cls){const m=$('#main');m.classList.remove('go-l','go-r');voi
   let x0=0,y0=0,t0=0,ok=false;
   const bad=t=>t.closest&&t.closest('input,select,textarea,summary,.sheet,#sheet,.tabs');
   document.addEventListener('touchstart',e=>{
-    const t=e.touches[0];ok=e.touches.length===1&&!bad(e.target)&&$('#sheet').hidden&&!document.body.classList.contains('welcome')&&t.clientX>24&&t.clientX<window.innerWidth-24;
+    const t=e.touches[0];ok=e.touches.length===1&&!bad(e.target)&&$('#sheet').hidden&&$('#year').hidden&&!document.body.classList.contains('welcome')&&t.clientX>24&&t.clientX<window.innerWidth-24;
     x0=t.clientX;y0=t.clientY;t0=e.timeStamp;
   },{passive:true});
   document.addEventListener('touchend',e=>{
@@ -1270,6 +1384,10 @@ document.addEventListener('click',e=>{
   }
   else if(a==='undo'){if(S.undoFn){const f=S.undoFn;S.undoFn=null;f();$('#toast').hidden=true}else if(S.undo){S.tx=[...S.tx,S.undo];S.undo=null;saveMonth();render();$('#toast').hidden=true}}
   else if(a==='ai')askAI();
+  else if(a==='year'){if(S.tab!=='ajustes')openYear()}
+  else if(a==='yclose')closeYear();
+  else if(a==='yprev'||a==='ynext'){S.year+=a==='yprev'?-1:1;paintYear()}
+  else if(a==='ygo'){S.ym=el.dataset.ym;S.open=null;closeYear();watchMonth();slideMain('go-r')}
   else if(a==='theme'||a==='accent'){
     S.cfg={...S.cfg,[a==='theme'?'theme':'accent']:el.dataset.v};saveCfg();render();
   }
@@ -1300,7 +1418,7 @@ document.addEventListener('submit',e=>{
   S.cfg={...S.cfg,name:n};S.pendRem=true;saveCfg();render();window.scrollTo(0,0);
 });
 document.addEventListener('toggle',e=>{if(e.target.id==='dnames')S.namesOpen=e.target.open},true);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)dismissSheet()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#year').hidden)closeYear();else if(!$('#sheet').hidden)dismissSheet()});
 document.addEventListener('input',e=>{
   if(e.target.id==='amt'||(e.target.classList&&e.target.classList.contains('moeda'))){
     const m=maskMoney(e.target.value);if(e.target.value!==m)e.target.value=m;
@@ -1412,7 +1530,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 14</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 15</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
