@@ -298,7 +298,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width
       <button type="button" data-kind="v" aria-pressed="false">Investimento</button>
     </div>
     <label for="amt">Valor</label>
-    <div class="amt"><span>R$</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
+    <div class="amt"><span>R$</span><input id="amt" inputmode="numeric" autocomplete="off" placeholder="0,00"></div>
     <label id="catlbl">Categoria</label>
     <div class="chips" id="catchips" role="group" aria-labelledby="catlbl"></div>
     <label for="desc">Nome do lançamento (opcional)</label>
@@ -707,7 +707,7 @@ function vMetas(c){
     const v=c.by[k.id]||0,lim=S.cfg.limits[k.id];
     return `<div class="lim"><div class="n"><b style="font-weight:600">${esc(k.n)}</b><small>gasto: ${brl(v)}${lim?` · restam ${lim-v>=0?brl(lim-v):'0,00 (passou '+brl(v-lim)+')'}`:''}</small>
       ${lim?`<div class="track"><i class="${v>lim?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></div>`:''}</div>
-      <input class="moeda" type="text" inputmode="decimal" data-lim="${k.id}" placeholder="sem limite" value="${lim?String(lim).replace('.',','):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
+      <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
     <p class="hint">Próximo último dia útil: <b>${esc(prox.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</b>. Para ser avisado todo mês:</p>
@@ -846,7 +846,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(placeInd);
 /* ---------- lançamento ---------- */
 function openSheet(t){
   S.editId=t?t.id:null;S.kind=t?t.t:'e';S.cat=t?t.c:null;
-  $('#amt').value=t?String(t.v).replace('.',','):'';$('#desc').value=t?t.d:'';$('#erro').textContent='';
+  $('#amt').value=t?moneyField(t.v):'';$('#desc').value=t?t.d:'';$('#erro').textContent='';
   const dt=$('#dt'),first=S.ym+'-01',last=S.ym+'-'+pad(daysIn(S.ym));
   dt.min=first;dt.max=last;dt.value=t?t.date:(isCurrent()?todayStr():first);
   const g=t&&t.grp;
@@ -959,6 +959,14 @@ function parseMoney(s){
   if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
   return parseFloat(s);
 }
+/* campo de valor: os dígitos entram pelos centavos (4590 vira 45,90) e a vírgula e os pontos aparecem sozinhos */
+function maskMoney(s){
+  const d=String(s).replace(/\D/g,'').replace(/^0+/,'').slice(0,11);
+  if(!d)return '';
+  const p=d.padStart(3,'0');
+  return p.slice(0,-2).replace(/\B(?=(\d{3})+$)/g,'.')+','+p.slice(-2);
+}
+const moneyField=v=>maskMoney(Math.round(v*100));
 function submit(e){
   e.preventDefault();
   const v=rnd(parseMoney($('#amt').value)),date=$('#dt').value,err=$('#erro');
@@ -1154,6 +1162,9 @@ document.addEventListener('submit',e=>{
 document.addEventListener('toggle',e=>{if(e.target.id==='dnames')S.namesOpen=e.target.open},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)dismissSheet()});
 document.addEventListener('input',e=>{
+  if(e.target.id==='amt'||(e.target.classList&&e.target.classList.contains('moeda'))){
+    const m=maskMoney(e.target.value);if(e.target.value!==m)e.target.value=m;
+  }
   if(e.target.id==='np'){S.rec=false;paintParc()}
   else if(e.target.id==='amt')paintParc();
   if(e.target.id==='sl'){
