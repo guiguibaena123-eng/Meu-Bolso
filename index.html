@@ -1678,7 +1678,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 19</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 20</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1786,7 +1786,8 @@ const REM_KINDS=[['d','Dia fixo do mês'],['u','Dia útil do mês'],['ult','Últ
 const remList=()=>Array.isArray(S.cfg.rems)?S.cfg.rems:[{id:'r0',k:'ult',n:0,h:9}];
 const remLabel=r=>r.k==='d'?'Dia '+r.n:r.k==='u'?r.n+'º dia útil':r.k==='ult'?'Último dia útil':'Último dia do mês';
 const remWhy=r=>r.k==='ult'||r.k==='fim'?'Fechar o mês':'Registrar entradas e gastos';
-const remUrl=r=>new URL('l/'+r.k+(r.k==='d'||r.k==='u'?pad(r.n):'')+'-'+pad(r.h)+'.ics',APP_URL).href.replace(/^https?:/,'webcal:');
+const remHref=r=>new URL('l/'+r.k+(r.k==='d'||r.k==='u'?pad(r.n):'')+'-'+pad(r.h)+'.ics',APP_URL).href;
+const remUrl=r=>remHref(r).replace(/^https?:/,'webcal:');
 const remOpts=(arr,cur)=>arr.map(([v,t])=>`<option value="${v}"${String(cur)===String(v)?' selected':''}>${t}</option>`).join('');
 function remForm(){
   const d=S.remDraft;
@@ -1799,7 +1800,7 @@ function remForm(){
 }
 function remPanel(){
   const list=remList(),dr=S.remDraft;
-  let h='<p class="hint">Avisos no Calendário nos dias que você escolher. Quem recebe em partes pode criar mais de um.</p><div class="rlist">';
+  let h=remDone()+'<p class="hint">Avisos no Calendário nos dias que você escolher. Quem recebe em partes pode criar mais de um.</p><div class="rlist">';
   h+=list.map(r=>dr&&!dr.isNew&&dr.id===r.id?remForm():`<div class="rrow"><div class="rt"><b>${esc(remLabel(r))} · ${r.h}h</b><small>${remWhy(r)}</small></div>
     <div class="racts"><a class="ghost sm" href="${remUrl(r)}">Ativar</a><button class="ghost sm" data-act="remedit" data-id="${esc(r.id)}">Editar</button></div></div>`).join('');
   h+='</div>';
@@ -1812,9 +1813,18 @@ function remPanel(){
   h+=`<p class="hint" style="margin-top:12px">Toque em <b>Ativar</b> para colocar o aviso no Calendário. Se você trocar um lembrete que já ativou, apague o antigo: abra o <b>Calendário</b> > <b>Calendários</b>, toque no <b>ⓘ</b> do calendário "Meu Bolso" e em <b>Cancelar assinatura</b>.</p>`;
   return h;
 }
-function remStore(list,msg){
+function remDone(){
+  const ids=S.remJust||[],rs=remList().filter(r=>ids.includes(r.id));
+  if(!rs.length)return '';
+  return `<div class="rdone" id="remdone" role="status"><b>${rs.length>1?'Seus lembretes estão prontos':'Seu lembrete está pronto'}</b>
+    <p class="hint">Toque para adicionar ao Calendário. Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b>.</p>
+    ${rs.map(r=>`<div class="rdrow"><span>${esc(remLabel(r))} · ${r.h}h</span><div class="racts"><a class="primary sm" href="${remUrl(r)}">Adicionar ao Calendário</a><button class="ghost sm" data-act="remcopy" data-id="${esc(r.id)}">Copiar link</button></div></div>`).join('')}
+    <button class="ghost sm" style="margin-top:8px" data-act="remok">Já adicionei</button></div>`;
+}
+function remStore(list,msg,just){
   const before=S.cfg.rems;
-  S.cfg={...S.cfg,rems:list};saveCfg();S.remDraft=null;render();
+  S.cfg={...S.cfg,rems:list};saveCfg();S.remDraft=null;S.remJust=just||[];render();
+  if(just&&just.length)setTimeout(()=>{const b=document.getElementById('remdone');if(b)b.scrollIntoView({block:'center',behavior:'smooth'})},80);
   S.undoFn=()=>{S.cfg={...S.cfg,rems:before};saveCfg();render()};
   toast(msg,true);
 }
@@ -1832,10 +1842,16 @@ document.addEventListener('click',e=>{
   else if(a==='remcancel'){S.remDraft=null;render()}
   else if(a==='remsave'){
     const d={...S.remDraft};delete d.isNew;const list=remList();
-    remStore(S.remDraft.isNew?[...list,d]:list.map(x=>x.id===d.id?d:x),'Salvo. Toque em Ativar para colocar no Calendário.');
+    remStore(S.remDraft.isNew?[...list,d]:list.map(x=>x.id===d.id?d:x),'Salvo. Agora é só adicionar ao Calendário.',[d.id]);
   }
   else if(a==='remdel'){remStore(remList().filter(x=>x.id!==S.remDraft.id),'Lembrete removido do app. Apague também no Calendário.')}
-  else if(a==='rempreset'){remStore(REM_PRESETS[el.dataset.p].map((r,i)=>({...r,id:'r'+Date.now().toString(36)+i})),'Lembretes atualizados. Toque em Ativar em cada um.')}
+  else if(a==='rempreset'){const nl=REM_PRESETS[el.dataset.p].map((r,i)=>({...r,id:'r'+Date.now().toString(36)+i}));remStore(nl,'Lembretes atualizados. Agora é só adicionar ao Calendário.',nl.map(r=>r.id))}
+  else if(a==='remok'){S.remJust=[];render()}
+  else if(a==='remcopy'){
+    const r=remList().find(x=>x.id===el.dataset.id);if(!r)return;
+    const ok=()=>toast('Link copiado. Cole no Safari, no Notas ou numa mensagem para você.'),fail=()=>toast('Não consegui copiar o link.');
+    try{navigator.clipboard.writeText(remHref(r)).then(ok,fail)}catch(err){fail()}
+  }
 });
 document.addEventListener('change',e=>{
   const t=e.target;if(!S.remDraft||!t.id||!t.closest('#remform'))return;
@@ -1843,7 +1859,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='rn')S.remDraft={...S.remDraft,n:+t.value};
   else if(t.id==='rh')S.remDraft={...S.remDraft,h:+t.value};
 });
-(()=>{const s=document.createElement('style');s.textContent='.rrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:.5px solid var(--line)}.rrow:first-child{border-top:0}.rt b{display:block}.rt small{color:var(--muted);font-size:.82rem}.racts{display:flex;gap:8px;flex:none}a.ghost,.ghost.sm{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}.sm{padding:8px 14px;min-height:40px;font-size:.9rem}.rform{background:var(--fill);border-radius:16px;padding:14px;margin:10px 0;display:grid;gap:8px}.rform select{background:var(--surface)}.rform label{margin-top:4px}';document.head.append(s)})();
+(()=>{const s=document.createElement('style');s.textContent='.rrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:.5px solid var(--line)}.rrow:first-child{border-top:0}.rt b{display:block}.rt small{color:var(--muted);font-size:.82rem}.racts{display:flex;gap:8px;flex:none}a.ghost,.ghost.sm{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}.sm{padding:8px 14px;min-height:40px;font-size:.9rem}a.sm{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.rdone{background:var(--ok-bg);color:var(--ok-fg);border-radius:18px;padding:14px;margin:4px 0 14px}.rdone .hint{color:inherit;opacity:.85;margin:4px 0 10px}.rdrow{display:grid;gap:8px;padding:10px 0;border-top:.5px solid rgba(0,0,0,.12)}.rdrow>span{font-weight:700}.rdrow .racts{flex-wrap:wrap}.rdone .ghost{background:rgba(255,255,255,.5)}.rform{background:var(--fill);border-radius:16px;padding:14px;margin:10px 0;display:grid;gap:8px}.rform select{background:var(--surface)}.rform label{margin-top:4px}';document.head.append(s)})();
 /* dicas diárias de investimento: notificação do próprio app (Web Push). Quem envia todo dia é o GitHub Actions. */
 const PUSH_KEY='BLisVhIKuRcbup2Cz4EGIswYNhKAhzQ7Z3fOTpQEZYQTXBct855g5Or5Dfb9DXRVkJZsFaRmR5igTUVRuXzMZU0';
 const PUSH_SECRETS='https://github.com/guiguibaena123-eng/Meu-Bolso/settings/secrets/actions/new';
