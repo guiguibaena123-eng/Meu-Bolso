@@ -330,7 +330,7 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
   .fab{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .18s ease}
   .fab.away{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .2s ease .3s}
 }
-#toast{bottom:calc(var(--barb) + var(--barh) + 84px);border-radius:16px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+#toast{width:max-content;bottom:calc(var(--barb) + var(--barh) + 84px);border-radius:16px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 
 /* folha de lançamento */
 .sheet{border-radius:30px 30px 0 0}
@@ -1086,12 +1086,8 @@ function vAjustes(c){
     <div class="swatches" role="group" aria-label="Cor de destaque">${Object.entries(LOOKS).map(([k,[n,col]])=>`<button type="button" class="sw" data-act="accent" data-v="${k}" style="background:${col}" aria-label="${n}" aria-pressed="${ac===k}"></button>`).join('')}</div></section>
     <section class="card"><h2>Seu nome</h2><input id="nomeinp" type="text" maxlength="30" value="${esc(S.cfg.name)}" autocomplete="given-name" aria-label="Seu nome"></section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
-  h+=`<section class="card"><h2>Lembrete no iPhone</h2>
-    <p class="hint">Um aviso todo mês no <b>último dia útil</b>, às 9h. Toque no botão e o iPhone abre o Calendário para adicionar.</p>
-    <a class="primary full" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="${remWebcal()}">Adicionar ao Calendário</a>
-    <p class="hint" style="margin-top:8px">Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b>. O aviso toca na hora marcada, todo mês.</p>
-    <div class="acts2" style="margin-top:8px"><button class="ghost" data-act="copyics">Copiar link para colar em outro lugar</button></div>
-    <details style="margin-top:12px"><summary class="sum">Prefere fazer à mão no app Lembretes?</summary>
+  h+=`<section class="card"><h2>Lembretes no iPhone</h2>${remPanel()}
+    <details style="margin-top:14px"><summary class="sum">Prefere fazer à mão no app Lembretes?</summary>
     <p class="hint" style="margin-top:8px">Crie um <b>lembrete</b> (no app Lembretes, não no Calendário), um passo de cada vez.</p>${remHtml()}</details></section>`;
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
@@ -1521,7 +1517,7 @@ document.addEventListener('click',e=>{
   }
   else if(a==='wipeall'){
     if(S.db&&(S.offline||!navigator.onLine)){S.confirm=null;render();toast('Para apagar tudo da sua conta, conecte-se à internet.');return}
-    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
+    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent,rems:S.cfg.rems};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
     if(S.db){
       const base='data/users/'+S.uid,pre='mbc:'+S.uid+':';
       try{Object.keys(localStorage).filter(k=>k.startsWith(pre)).forEach(k=>localStorage.removeItem(k))}catch(err){}
@@ -1627,7 +1623,8 @@ function loadCfg(raw){
   const d=raw||{};
   S.cfg={savePct:Number.isFinite(d.savePct)?d.savePct:20,limits:d.limits&&typeof d.limits==='object'?d.limits:{},
     names:d.names&&typeof d.names==='object'?d.names:{},custom:Array.isArray(d.custom)?d.custom:[],name:typeof d.name==='string'?d.name.slice(0,30):'',recs:Array.isArray(d.recs)?d.recs:[],
-    theme:['auto','light','dark'].includes(d.theme)?d.theme:'auto',accent:['green','blue','purple','orange'].includes(d.accent)?d.accent:'green'};
+    theme:['auto','light','dark'].includes(d.theme)?d.theme:'auto',accent:['green','blue','purple','orange'].includes(d.accent)?d.accent:'green',
+    rems:Array.isArray(d.rems)?d.rems.filter(r=>r&&typeof r.id==='string'&&['d','u','ult','fim'].includes(r.k)&&Number.isInteger(r.n)&&[8,9,12,18,20].includes(r.h)).slice(0,8):null};
 }
 async function start(){
   render();
@@ -1681,7 +1678,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 18</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 19</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1782,6 +1779,71 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('[data-act=remdone]'))return;
   S.pendRem=false;render();window.scrollTo(0,0);
 });
+
+/* lembretes editáveis: cada pessoa escolhe os dias em que recebe (um ou mais avisos por mês) */
+const REM_H=[8,9,12,18,20];
+const REM_KINDS=[['d','Dia fixo do mês'],['u','Dia útil do mês'],['ult','Último dia útil'],['fim','Último dia do mês']];
+const remList=()=>Array.isArray(S.cfg.rems)?S.cfg.rems:[{id:'r0',k:'ult',n:0,h:9}];
+const remLabel=r=>r.k==='d'?'Dia '+r.n:r.k==='u'?r.n+'º dia útil':r.k==='ult'?'Último dia útil':'Último dia do mês';
+const remWhy=r=>r.k==='ult'||r.k==='fim'?'Fechar o mês':'Registrar entradas e gastos';
+const remUrl=r=>new URL('l/'+r.k+(r.k==='d'||r.k==='u'?pad(r.n):'')+'-'+pad(r.h)+'.ics',APP_URL).href.replace(/^https?:/,'webcal:');
+const remOpts=(arr,cur)=>arr.map(([v,t])=>`<option value="${v}"${String(cur)===String(v)?' selected':''}>${t}</option>`).join('');
+function remForm(){
+  const d=S.remDraft;
+  const nums=d.k==='d'?Array.from({length:28},(_,i)=>[i+1,'Dia '+(i+1)]):d.k==='u'?Array.from({length:10},(_,i)=>[i+1,(i+1)+'º dia útil']):null;
+  return `<div class="rform" id="remform">
+    <label class="hint" for="rk">Quando</label><select id="rk">${remOpts(REM_KINDS,d.k)}</select>
+    ${nums?`<label class="hint" for="rn">${d.k==='d'?'Qual dia do mês':'Qual dia útil'}</label><select id="rn">${remOpts(nums,d.n)}</select>`:''}
+    <label class="hint" for="rh">Horário do aviso</label><select id="rh">${remOpts(REM_H.map(x=>[x,x+'h']),d.h)}</select>
+    <div class="acts2" style="margin-top:4px"><button class="primary" data-act="remsave">Salvar</button><button class="ghost" data-act="remcancel">Cancelar</button>${d.isNew?'':'<button class="ghost danger" data-act="remdel">Remover</button>'}</div></div>`;
+}
+function remPanel(){
+  const list=remList(),dr=S.remDraft;
+  let h='<p class="hint">Avisos no Calendário nos dias que você escolher. Quem recebe em partes pode criar mais de um.</p><div class="rlist">';
+  h+=list.map(r=>dr&&!dr.isNew&&dr.id===r.id?remForm():`<div class="rrow"><div class="rt"><b>${esc(remLabel(r))} · ${r.h}h</b><small>${remWhy(r)}</small></div>
+    <div class="racts"><a class="ghost sm" href="${remUrl(r)}">Ativar</a><button class="ghost sm" data-act="remedit" data-id="${esc(r.id)}">Editar</button></div></div>`).join('');
+  h+='</div>';
+  if(dr&&dr.isNew)h+=remForm();
+  else if(!dr){
+    h+=`<button class="ghost" style="margin-top:12px;width:100%" data-act="remnew">Adicionar lembrete</button>
+    <p class="lbl2" style="margin-top:16px">Atalhos</p>
+    <div class="chips"><button class="chip" data-act="rempreset" data-p="uma">Recebo uma vez só</button><button class="chip" data-act="rempreset" data-p="duas">Recebo em duas partes</button><button class="chip" data-act="rempreset" data-p="util">5º dia útil</button><button class="chip" data-act="rempreset" data-p="fim">Fechar o mês</button></div>`;
+  }
+  h+=`<p class="hint" style="margin-top:12px">Toque em <b>Ativar</b> para colocar o aviso no Calendário. Se você trocar um lembrete que já ativou, apague o antigo: abra o <b>Calendário</b> > <b>Calendários</b>, toque no <b>ⓘ</b> do calendário "Meu Bolso" e em <b>Cancelar assinatura</b>.</p>`;
+  return h;
+}
+function remStore(list,msg){
+  const before=S.cfg.rems;
+  S.cfg={...S.cfg,rems:list};saveCfg();S.remDraft=null;render();
+  S.undoFn=()=>{S.cfg={...S.cfg,rems:before};saveCfg();render()};
+  toast(msg,true);
+}
+const REM_PRESETS={
+  uma:[{k:'d',n:5,h:9}],
+  duas:[{k:'d',n:5,h:9},{k:'ult',n:0,h:9}],
+  util:[{k:'u',n:5,h:9}],
+  fim:[{k:'ult',n:0,h:9}]
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act;
+  if(a==='remnew'){S.remDraft={id:'r'+Date.now().toString(36),k:'d',n:5,h:9,isNew:true};render()}
+  else if(a==='remedit'){const r=remList().find(x=>x.id===el.dataset.id);if(r){S.remDraft={...r,isNew:false};render()}}
+  else if(a==='remcancel'){S.remDraft=null;render()}
+  else if(a==='remsave'){
+    const d={...S.remDraft};delete d.isNew;const list=remList();
+    remStore(S.remDraft.isNew?[...list,d]:list.map(x=>x.id===d.id?d:x),'Salvo. Toque em Ativar para colocar no Calendário.');
+  }
+  else if(a==='remdel'){remStore(remList().filter(x=>x.id!==S.remDraft.id),'Lembrete removido do app. Apague também no Calendário.')}
+  else if(a==='rempreset'){remStore(REM_PRESETS[el.dataset.p].map((r,i)=>({...r,id:'r'+Date.now().toString(36)+i})),'Lembretes atualizados. Toque em Ativar em cada um.')}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;if(!S.remDraft||!t.id||!t.closest('#remform'))return;
+  if(t.id==='rk'){S.remDraft={...S.remDraft,k:t.value,n:t.value==='d'||t.value==='u'?5:0};render()}
+  else if(t.id==='rn')S.remDraft={...S.remDraft,n:+t.value};
+  else if(t.id==='rh')S.remDraft={...S.remDraft,h:+t.value};
+});
+(()=>{const s=document.createElement('style');s.textContent='.rrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:.5px solid var(--line)}.rrow:first-child{border-top:0}.rt b{display:block}.rt small{color:var(--muted);font-size:.82rem}.racts{display:flex;gap:8px;flex:none}a.ghost,.ghost.sm{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}.sm{padding:8px 14px;min-height:40px;font-size:.9rem}.rform{background:var(--fill);border-radius:16px;padding:14px;margin:10px 0;display:grid;gap:8px}.rform select{background:var(--surface)}.rform label{margin-top:4px}';document.head.append(s)})();
 /* dicas diárias de investimento: notificação do próprio app (Web Push). Quem envia todo dia é o GitHub Actions. */
 const PUSH_KEY='BLisVhIKuRcbup2Cz4EGIswYNhKAhzQ7Z3fOTpQEZYQTXBct855g5Or5Dfb9DXRVkJZsFaRmR5igTUVRuXzMZU0';
 const PUSH_SECRETS='https://github.com/guiguibaena123-eng/Meu-Bolso/settings/secrets/actions/new';
