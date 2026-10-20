@@ -1678,7 +1678,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 20</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 21</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1765,21 +1765,6 @@ document.addEventListener('click',e=>{
   }
 });
 (()=>{const s=document.createElement('style');s.textContent='.wiz{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}.wiz .dots{display:flex;gap:6px;margin-bottom:12px}.wiz .dots i{flex:1;height:5px;border-radius:3px;background:var(--line)}.wiz .dots i.done{background:var(--accent);opacity:.45}.wiz .dots i.now{background:var(--accent)}.wiz .wk{margin:0;font-size:12px;color:var(--muted);font-weight:600}.wiz h3{margin:4px 0 8px;font-size:19px;line-height:1.25}.wiz .wd{margin:0;font-size:15px;line-height:1.5}.wiz .wbig{margin:0 0 8px;padding:12px 14px;border-radius:12px;background:var(--card,#fff);border:1px dashed var(--accent);font-size:16px;font-weight:700;line-height:1.35}.wiz .acts2{margin:8px 0 0}.wiz .wnav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}.wiz .wnav .primary{flex:1;max-width:60%}';document.head.append(s)})();
-/* depois do nome: convida a ativar o lembrete mensal (uma vez só) */
-function vRemind(){
-  return `<section class="boas"><p class="lbl">Meu Bolso</p>
-    <h1>Ative seu lembrete, ${esc(S.cfg.name)}</h1>
-    <p class="hint">Todo último dia útil do mês o iPhone te avisa, às 9h, para fechar o mês. Leva um toque.</p>
-    <a class="primary full" style="display:block;text-align:center;text-decoration:none;margin-top:18px" href="${remWebcal()}">Ativar lembrete</a>
-    <p class="hint" style="margin-top:10px">Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b> e depois volte aqui pelo ícone do app.</p>
-    <button class="ghost" type="button" data-act="remdone" style="margin-top:14px;width:100%">Continuar</button>
-    <p class="hint" style="margin-top:8px">Você também pode ativar depois, em Ajustes.</p></section>`;
-}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('[data-act=remdone]'))return;
-  S.pendRem=false;render();window.scrollTo(0,0);
-});
-
 /* lembretes editáveis: cada pessoa escolhe os dias em que recebe (um ou mais avisos por mês) */
 const REM_H=[8,9,12,18,20];
 const REM_KINDS=[['d','Dia fixo do mês'],['u','Dia útil do mês'],['ult','Último dia útil'],['fim','Último dia do mês']];
@@ -1860,6 +1845,68 @@ document.addEventListener('change',e=>{
   else if(t.id==='rh')S.remDraft={...S.remDraft,h:+t.value};
 });
 (()=>{const s=document.createElement('style');s.textContent='.rrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:.5px solid var(--line)}.rrow:first-child{border-top:0}.rt b{display:block}.rt small{color:var(--muted);font-size:.82rem}.racts{display:flex;gap:8px;flex:none}a.ghost,.ghost.sm{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}.sm{padding:8px 14px;min-height:40px;font-size:.9rem}a.sm{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.rdone{background:var(--ok-bg);color:var(--ok-fg);border-radius:18px;padding:14px;margin:4px 0 14px}.rdone .hint{color:inherit;opacity:.85;margin:4px 0 10px}.rdrow{display:grid;gap:8px;padding:10px 0;border-top:.5px solid rgba(0,0,0,.12)}.rdrow>span{font-weight:700}.rdrow .racts{flex-wrap:wrap}.rdone .ghost{background:rgba(255,255,255,.5)}.rform{background:var(--fill);border-radius:16px;padding:14px;margin:10px 0;display:grid;gap:8px}.rform select{background:var(--surface)}.rform label{margin-top:4px}';document.head.append(s)})();
+
+/* depois do nome: pergunta como a pessoa recebe e já monta os lembretes dela */
+S.ob={stage:0,mode:null,a:{k:'d',n:5},b:{k:'ult',n:0},h:9};
+const obNums=k=>k==='d'?Array.from({length:28},(_,i)=>[i+1,'Dia '+(i+1)]):k==='u'?Array.from({length:10},(_,i)=>[i+1,(i+1)+'º dia útil']):null;
+function obPart(id,p,label){
+  const nums=obNums(p.k);
+  return `<div class="obpart"><p class="lbl2">${label}</p>
+    <select id="ob${id}k" aria-label="${label}: quando">${remOpts(REM_KINDS,p.k)}</select>
+    ${nums?`<select id="ob${id}n" aria-label="${label}: qual">${remOpts(nums,p.n)}</select>`:''}</div>`;
+}
+function vRemind(){
+  const o=S.ob,name=esc(S.cfg.name);
+  if(o.stage===0)return `<section class="boas"><p class="lbl">Meu Bolso</p>
+    <h1>Como você recebe, ${name}?</h1>
+    <p class="hint">Assim eu te aviso no dia certo para registrar o dinheiro que entrou.</p>
+    <div class="obopts">
+      <button type="button" class="obopt" data-act="obmode" data-m="uma"><b>Uma vez por mês</b><small>O pagamento cai num dia só</small></button>
+      <button type="button" class="obopt" data-act="obmode" data-m="duas"><b>Em duas partes</b><small>Uma parte no começo e o resto no fim do mês</small></button>
+      <button type="button" class="obopt" data-act="obmode" data-m="nao"><b>Não tenho dia certo</b><small>Só quero fechar o mês, no último dia útil</small></button>
+    </div>
+    <button class="ghost" type="button" data-act="obskip" style="margin-top:6px;width:100%">Agora não</button></section>`;
+  if(o.stage===1)return `<section class="boas"><p class="lbl">Meu Bolso</p>
+    <h1>${o.mode==='duas'?'Quando caem as duas partes?':'Em que dia você recebe?'}</h1>
+    ${obPart('a',o.a,o.mode==='duas'?'Primeira parte':'Dia do recebimento')}
+    ${o.mode==='duas'?obPart('b',o.b,'Segunda parte'):''}
+    <div class="obpart"><p class="lbl2">Horário do aviso</p><select id="obh" aria-label="Horário do aviso">${remOpts(REM_H.map(x=>[x,x+'h']),o.h)}</select></div>
+    <div class="acts2" style="margin-top:14px"><button class="ghost" type="button" data-act="obback">Voltar</button><button class="primary" type="button" style="flex:1" data-act="obsave">Continuar</button></div></section>`;
+  const rs=remList().filter(r=>(S.remJust||[]).includes(r.id));
+  return `<section class="boas"><p class="lbl">Meu Bolso</p><h1>Pronto, ${name}!</h1>
+    <p class="hint">Toque para adicionar o aviso ao Calendário. Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b>.</p>
+    ${rs.map(r=>`<div class="rdrow"><span>${esc(remLabel(r))} · ${r.h}h</span><div class="racts"><a class="primary sm" href="${remUrl(r)}">Adicionar ao Calendário</a><button class="ghost sm" type="button" data-act="remcopy" data-id="${esc(r.id)}">Copiar link</button></div></div>`).join('')}
+    <button class="primary full" type="button" style="margin-top:14px" data-act="remdone">Continuar para o app</button>
+    <p class="hint" style="margin-top:8px">Você pode mudar isso depois, em Ajustes.</p></section>`;
+}
+function obApply(parts){
+  const base='r'+Date.now().toString(36),list=parts.map((p,i)=>({id:base+i,k:p.k,n:p.n,h:S.ob.h}));
+  S.cfg={...S.cfg,rems:list};saveCfg();S.remJust=list.map(r=>r.id);S.ob.stage=2;render();window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,o=S.ob;
+  if(a==='obmode'){
+    o.mode=el.dataset.m;
+    if(o.mode==='nao'){obApply([{k:'ult',n:0}]);return}
+    o.a={k:'d',n:5};o.b={k:'ult',n:0};o.stage=1;render();window.scrollTo(0,0);
+  }
+  else if(a==='obback'){o.stage=0;render()}
+  else if(a==='obsave')obApply(o.mode==='duas'?[o.a,o.b]:[o.a]);
+  else if(a==='obskip'){S.pendRem=false;render();window.scrollTo(0,0)}
+  else if(a==='remdone'){S.pendRem=false;S.remJust=[];o.stage=0;render();window.scrollTo(0,0)}
+});
+document.addEventListener('change',e=>{
+  const t=e.target,o=S.ob;if(!t.id||t.id.slice(0,2)!=='ob')return;
+  const def=k=>k==='d'||k==='u'?5:0;
+  if(t.id==='obak'){o.a={k:t.value,n:def(t.value)};render()}
+  else if(t.id==='obbk'){o.b={k:t.value,n:def(t.value)};render()}
+  else if(t.id==='oban')o.a={...o.a,n:+t.value};
+  else if(t.id==='obbn')o.b={...o.b,n:+t.value};
+  else if(t.id==='obh')o.h=+t.value;
+});
+(()=>{const s=document.createElement('style');s.textContent='.obopts{display:grid;gap:10px;margin:8px 0}.obopt{all:unset;box-sizing:border-box;display:block;background:var(--surface);box-shadow:var(--shadow);border-radius:20px;padding:16px 18px;cursor:pointer;transition:transform .15s ease}.obopt:active{transform:scale(.97)}.obopt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.obopt b{display:block;font-size:1.08rem;margin-bottom:2px}.obopt small{color:var(--muted);font-size:.9rem}.obpart{display:grid;gap:8px;margin-top:10px}.boas .rdrow{display:grid;gap:8px;padding:12px 0;border-top:.5px solid var(--line)}.boas .rdrow>span{font-weight:700}';document.head.append(s)})();
+
 /* dicas diárias de investimento: notificação do próprio app (Web Push). Quem envia todo dia é o GitHub Actions. */
 const PUSH_KEY='BLisVhIKuRcbup2Cz4EGIswYNhKAhzQ7Z3fOTpQEZYQTXBct855g5Or5Dfb9DXRVkJZsFaRmR5igTUVRuXzMZU0';
 const PUSH_SECRETS='https://github.com/guiguibaena123-eng/Meu-Bolso/settings/secrets/actions/new';
