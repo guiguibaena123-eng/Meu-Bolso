@@ -710,15 +710,18 @@ function vMetas(c){
       <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
-    <p class="hint">Próximo último dia útil: <b>${esc(prox.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</b>. Para ser avisado todo mês:</p>
-    <ol class="hint" style="margin:10px 0 12px;padding-left:20px;display:grid;gap:6px">
+    <p class="hint">Próximo último dia útil: <b>${esc(prox.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</b>. Crie um aviso que se repete todo mês nesse dia, direto no app Calendário.</p>
+    <label class="hint" for="remh" style="display:block;margin:12px 0 6px">Horário do aviso</label>
+    <select id="remh" aria-label="Horário do aviso">${[8,9,10,12,18,20].map(x=>`<option value="${x}"${x===9?' selected':''}>${x}h</option>`).join('')}</select>
+    <div class="acts2" style="margin-top:12px"><button class="ghost" data-act="remind">Criar lembrete no Calendário</button></div>
+    <p class="hint" style="margin-top:10px">Vai abrir a tela de compartilhar do iPhone. Escolha <b>Calendário</b> e confirme em <b>Adicionar</b>. O aviso toca na hora marcada, no último dia útil de cada mês, e ao abrir o app o Resumo mostra a previsão do mês seguinte.</p>
+    <details style="margin-top:8px"><summary class="sum">Não apareceu o Calendário? Faça manualmente</summary>
+    <ol class="hint" style="margin:10px 0 0;padding-left:20px;display:grid;gap:6px">
       <li>Abra o app <b>Calendário</b> e toque em <b>+</b>.</li>
-      <li>Título: <b>Fechar o mês no Meu Bolso</b>. Cole o link do app nas notas.</li>
+      <li>Título: <b>Fechar o mês no Meu Bolso</b>.</li>
       <li>Em <b>Repetir</b>, escolha <b>Personalizar</b>, depois <b>Mensalmente</b> e a opção do <b>último dia útil</b> (ou "último dia da semana").</li>
-      <li>Em <b>Alerta</b>, escolha o horário. Pronto.</li>
-    </ol>
-    <button class="ghost" data-act="copyurl">Copiar link do app</button>
-    <p class="hint" style="margin-top:10px">Os nomes das opções podem variar um pouco conforme a versão do iOS. Ao abrir o app por esse alarme, o Resumo mostra o aviso do dia com a previsão do mês seguinte.</p></section>`;
+      <li>Em <b>Alerta</b>, escolha <b>Na hora do evento</b>.</li>
+    </ol></details></section>`;
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
   h+=`<section class="card"><details id="dnames"${S.namesOpen?' open':''}><summary class="sum">Nomes das categorias</summary><p class="hint" style="margin:10px 0 8px">Renomeie qualquer categoria ou crie as suas. Apagar o nome volta ao original.</p>`+
@@ -1295,6 +1298,39 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='impfile'&&e.target.files&&e.target.files[0]){doImport(e.target.files[0]);e.target.value=''}});
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+/* lembrete mensal: gera um evento .ics (último dia útil, todo mês) para o Calendário do iPhone */
+function reminderIcs(hour){
+  const now=new Date(),at=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate(),hour,0,0);
+  let d=lastBiz(ymOf(now));
+  if(at(d)<=now)d=lastBiz(shiftYm(ymOf(now),1));
+  const f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(hour)+'0000';
+  const stamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+'T'+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+'Z';
+  const esc2=s=>s.replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+  const url=APP_URL;
+  return [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Meu Bolso//Lembrete//PT','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'BEGIN:VEVENT','UID:lembrete-mensal@meu-bolso','DTSTAMP:'+stamp,
+    'DTSTART:'+f(d),'DURATION:PT15M',
+    'RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1',
+    'SUMMARY:'+esc2('Fechar o mês no Meu Bolso'),
+    'DESCRIPTION:'+esc2('Registre os gastos e veja a previsão do mês seguinte.\n'+url),
+    'URL:'+url,
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc2('Fechar o mês no Meu Bolso'),'TRIGGER:PT0M','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n')+'\r\n';
+}
+async function doRemind(){
+  const sel=$('#remh'),hour=sel?+sel.value:9,name='lembrete-meu-bolso.ics';
+  const ics=reminderIcs(hour),blob=new Blob([ics],{type:'text/calendar'});
+  try{
+    const f=new File([blob],name,{type:'text/calendar'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Lembrete do Meu Bolso'});return}
+  }catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+  toast('Arquivo salvo. Abra-o para adicionar ao Calendário.');
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-act=remind]'))doRemind()});
 
 start();
 })();
