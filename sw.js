@@ -1,5 +1,5 @@
 /* Meu Bolso: guarda o app no aparelho para abrir sem internet. Ao publicar uma versão nova, troque o número em VERSAO. */
-const VERSAO='meu-bolso-v7';
+const VERSAO='meu-bolso-v8';
 const ARQUIVOS=['./','./index.html','./fonts.css','./fonts/bricolage-grotesque.woff2','./fonts/figtree.woff2','./manifest.webmanifest','./icon-v2-192.png','./icon-v2-512.png','./apple-touch-icon-v2.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSAO).then(c=>c.addAll(ARQUIVOS.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSAO).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

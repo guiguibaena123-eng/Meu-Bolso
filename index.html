@@ -710,27 +710,7 @@ function vMetas(c){
       <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
-    <p class="hint">Crie um aviso que toca todo mês no <b>último dia útil</b>. Leva menos de 1 minuto e só precisa ser feito uma vez. Siga os passos no app <b>Calendário</b>:</p>
-    <ol class="steps">
-      <li><b>Abra o Calendário</b> e toque em <b>+</b> (canto de cima, à direita).</li>
-      <li><b>Título:</b> escreva <b>Fechar o mês no Meu Bolso</b>.
-        <div class="acts2" style="margin-top:8px"><button class="ghost" data-act="copytitle">Copiar título</button></div></li>
-      <li><b>Dia inteiro:</b> deixe <b>desligado</b>. Em <b>Início</b>, escolha o dia <b>${esc(prox.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</b>, às <b>9:00</b> (ou o horário que preferir).</li>
-      <li>Toque em <b>Repetir</b>, depois em <b>Personalizar</b>.</li>
-      <li>Em <b>Frequência</b>, escolha <b>Mensalmente</b>.</li>
-      <li>Abaixo, troque de <b>Cada</b> para <b>Todo mês no(a)</b> (a segunda opção da lista).</li>
-      <li>Escolha <b>Último</b> e, ao lado, <b>Dia da semana</b> (é Segunda a Sexta). Não escolha um dia específico como "sexta-feira".</li>
-      <li>Toque em <b>Voltar</b> (canto de cima, à esquerda) e depois em <b>Alerta</b> e escolha <b>Na hora do evento</b>.</li>
-      <li>Toque em <b>Notas</b> e cole o link do app.
-        <div class="acts2" style="margin-top:8px"><button class="ghost" data-act="copyurl">Copiar link do app</button></div></li>
-      <li>Toque em <b>Adicionar</b> (canto de cima, à direita). Pronto: o aviso aparece todo mês.</li>
-    </ol>
-    <p class="hint">Os nomes podem variar um pouco conforme a versão do iOS. Ao abrir o app por esse aviso, o Resumo mostra a previsão do mês seguinte.</p>
-    <details style="margin-top:10px"><summary class="sum">Tentar criar automaticamente</summary>
-    <label class="hint" for="remh" style="display:block;margin:10px 0 6px">Horário do aviso</label>
-    <select id="remh" aria-label="Horário do aviso">${[8,9,10,12,18,20].map(x=>`<option value="${x}"${x===9?' selected':''}>${x}h</option>`).join('')}</select>
-    <div class="acts2" style="margin-top:10px"><button class="ghost" data-act="remind">Criar arquivo do lembrete</button></div>
-    <p class="hint" style="margin-top:8px">Gera um arquivo que o iPhone pode abrir no Calendário. Em alguns aparelhos o Calendário não aparece nas opções; nesse caso use o passo a passo acima.</p></details></section>`;
+    <p class="hint">Um aviso todo mês no último dia útil. Siga um passo de cada vez.</p>${remHtml()}</section>`;
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
   h+=`<section class="card"><details id="dnames"${S.namesOpen?' open':''}><summary class="sum">Nomes das categorias</summary><p class="hint" style="margin:10px 0 8px">Renomeie qualquer categoria ou crie as suas. Apagar o nome volta ao original.</p>`+
@@ -1269,7 +1249,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 7</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 8</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1307,45 +1287,50 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='impfile'&&e.target.files&&e.target.files[0]){doImport(e.target.files[0]);e.target.value=''}});
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-/* lembrete mensal: gera um evento .ics (último dia útil, todo mês) para o Calendário do iPhone */
-function reminderIcs(hour){
-  const now=new Date(),at=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate(),hour,0,0);
-  let d=lastBiz(ymOf(now));
-  if(at(d)<=now)d=lastBiz(shiftYm(ymOf(now),1));
-  const f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(hour)+'0000';
-  const stamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+'T'+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+'Z';
-  const esc2=s=>s.replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
-  const url=APP_URL;
-  return [
-    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Meu Bolso//Lembrete//PT','CALSCALE:GREGORIAN','METHOD:PUBLISH',
-    'BEGIN:VEVENT','UID:lembrete-mensal@meu-bolso','DTSTAMP:'+stamp,
-    'DTSTART:'+f(d),'DURATION:PT15M',
-    'RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1',
-    'SUMMARY:'+esc2('Fechar o mês no Meu Bolso'),
-    'DESCRIPTION:'+esc2('Registre os gastos e veja a previsão do mês seguinte.\n'+url),
-    'URL:'+url,
-    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc2('Fechar o mês no Meu Bolso'),'TRIGGER:PT0M','END:VALARM',
-    'END:VEVENT','END:VCALENDAR'
-  ].join('\r\n')+'\r\n';
+/* lembrete mensal: assistente de um passo por vez para criar o evento no Calendário do iPhone */
+let remStep=0;
+try{remStep=Math.max(0,Math.min(6,parseInt(sessionStorage.getItem('mbRem'),10)||0))}catch(e){}
+function remNextDate(){
+  const now=new Date();let d=lastBiz(ymOf(now));
+  if(new Date(d.getFullYear(),d.getMonth(),d.getDate(),9)<=now)d=lastBiz(shiftYm(ymOf(now),1));
+  return d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
 }
-async function doRemind(){
-  const sel=$('#remh'),hour=sel?+sel.value:9,name='lembrete-meu-bolso.ics';
-  const ics=reminderIcs(hour),blob=new Blob([ics],{type:'text/calendar'});
-  try{
-    const f=new File([blob],name,{type:'text/calendar'});
-    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Lembrete do Meu Bolso'});return}
-  }catch(e){if(e&&e.name==='AbortError')return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
-  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-  toast('Arquivo salvo. Abra-o para adicionar ao Calendário.');
+function remHtml(){
+  const steps=[
+    {t:'Abra o Calendário',d:'Toque no <b>+</b>, no canto de cima à direita.'},
+    {t:'Escreva o título',big:'Fechar o mês no Meu Bolso',btn:['copytitle','Copiar título']},
+    {t:'Escolha o dia e a hora',big:esc(remNextDate())+' · 9:00',d:'Deixe <b>Dia inteiro</b> desligado.'},
+    {t:'Repita todo mês',d:'Toque em <b>Repetir</b>, depois em <b>Personalizar</b> e escolha <b>Mensalmente</b>.'},
+    {t:'Só no último dia útil',d:'Troque para <b>Todo mês no(a)</b>. Escolha <b>Último</b> e <b>Dia da semana</b>.'},
+    {t:'Ative o alerta',d:'Volte, toque em <b>Alerta</b> e escolha <b>Na hora do evento</b>.'},
+    {t:'Salve',d:'Toque em <b>Adicionar</b>, no canto de cima à direita.',last:true}
+  ];
+  const s=steps[remStep],n=steps.length;
+  return `<div id="remwiz" class="wiz" role="group" aria-label="Passo ${remStep+1} de ${n}">
+    <div class="dots" aria-hidden="true">${steps.map((_,i)=>`<i class="${i<remStep?'done':i===remStep?'now':''}"></i>`).join('')}</div>
+    <p class="wk">Passo ${remStep+1} de ${n}</p>
+    <h3>${s.t}</h3>
+    ${s.big?`<p class="wbig">${s.big}</p>`:''}
+    ${s.d?`<p class="wd">${s.d}</p>`:''}
+    ${s.btn?`<div class="acts2"><button class="ghost" data-act="${s.btn[0]}">${s.btn[1]}</button></div>`:''}
+    <div class="wnav">${remStep>0?'<button class="ghost" data-act="remback">Voltar</button>':'<span></span>'}
+      <button class="primary" data-act="remnext">${s.last?'Concluí':'Próximo'}</button></div></div>`;
 }
-document.addEventListener('click',e=>{if(e.target.closest('[data-act=remind]'))doRemind()});
+function remGo(i){
+  remStep=i;try{sessionStorage.setItem('mbRem',String(i))}catch(e){}
+  const w=$('#remwiz');if(w)w.outerHTML=remHtml();
+}
 document.addEventListener('click',e=>{
-  if(!e.target.closest('[data-act=copytitle]'))return;
-  const ok=()=>toast('Título copiado.'),fail=()=>toast('Não consegui copiar. Digite: Fechar o mês no Meu Bolso');
-  try{navigator.clipboard.writeText('Fechar o mês no Meu Bolso').then(ok,fail)}catch(err){fail()}
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act;
+  if(a==='remnext'){if(remStep>=6){remGo(0);toast('Pronto! O iPhone vai te avisar todo mês.')}else remGo(remStep+1)}
+  else if(a==='remback')remGo(Math.max(0,remStep-1));
+  else if(a==='copytitle'){
+    const ok=()=>toast('Título copiado. Cole no Calendário.'),fail=()=>toast('Não consegui copiar. Digite: Fechar o mês no Meu Bolso');
+    try{navigator.clipboard.writeText('Fechar o mês no Meu Bolso').then(ok,fail)}catch(err){fail()}
+  }
 });
-(()=>{const s=document.createElement('style');s.textContent='ol.steps{list-style:none;counter-reset:st;margin:12px 0;padding:0;display:grid;gap:10px}ol.steps>li{counter-increment:st;position:relative;padding-left:38px;min-height:28px;font-size:14px;line-height:1.45}ol.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--accent,#0B7A5E);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}';document.head.append(s)})();
+(()=>{const s=document.createElement('style');s.textContent='.wiz{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}.wiz .dots{display:flex;gap:6px;margin-bottom:12px}.wiz .dots i{flex:1;height:5px;border-radius:3px;background:var(--line)}.wiz .dots i.done{background:var(--accent);opacity:.45}.wiz .dots i.now{background:var(--accent)}.wiz .wk{margin:0;font-size:12px;color:var(--muted);font-weight:600}.wiz h3{margin:4px 0 8px;font-size:19px;line-height:1.25}.wiz .wd{margin:0;font-size:15px;line-height:1.5}.wiz .wbig{margin:0 0 8px;padding:12px 14px;border-radius:12px;background:var(--card,#fff);border:1px dashed var(--accent);font-size:16px;font-weight:700;line-height:1.35}.wiz .acts2{margin:8px 0 0}.wiz .wnav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}.wiz .wnav .primary{flex:1;max-width:60%}';document.head.append(s)})();
 
 start();
 })();
