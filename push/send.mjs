@@ -11,13 +11,13 @@ const dicas = JSON.parse(fs.readFileSync(new URL('./dicas.json', import.meta.url
 const dia = Math.floor((Date.now() - 3 * 3600e3) / 86400e3); // dia no horário de Brasília
 const dica = dicas[dia % dicas.length];
 const payload = JSON.stringify({
-  title: 'Dica de investimento',
-  body: dica,
+  title: dica.t,
+  body: dica.b,
   url: SITE,
 });
 
 if (dry) {
-  console.log('Dica de hoje (' + (dia % dicas.length + 1) + '/' + dicas.length + '):', dica);
+  console.log('Dica de hoje (' + (dia % dicas.length + 1) + '/' + dicas.length + '):', dica.t, '-', dica.b);
   process.exit(0);
 }
 

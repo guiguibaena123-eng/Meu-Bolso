@@ -848,7 +848,7 @@ function vResumo(c,p){
   let h=`<section class="hero"><p class="ola">${saud()}, ${esc(S.cfg.name)}</p><p class="lbl">${c.bal>=0?'Sobra do mês':'Faltou no mês'}</p>
     <p class="big ${c.bal<0?'neg':''}">${brl(c.bal)}</p>
     <dl class="io"><div><dt>Entrou</dt><dd class="pos">${brl(c.inc)}</dd></div><div><dt>Saiu</dt><dd>${brl(c.exp)}</dd></div>${c.inv>0?`<div style="grid-column:1/-1"><dt>Investiu</dt><dd style="color:var(--need)">${brl(c.inv)}</dd></div>`:''}</dl></section>`;
-  if(!isStandalone())h+=`<p class="aviso">Para abrir este app sem internet, toque em <b>Compartilhar</b> no Safari e em <b>Adicionar à Tela de Início</b>.</p>`;
+  if(!isStandalone())h+=`<p class="aviso">Instale o app para usar sem internet.<br><button class="ghost" style="margin-top:8px" data-act="installguide">Ver como instalar</button></p>`;
   if(isCurrent()&&ymOf(lastBiz(S.ym))+'-'+pad(lastBiz(S.ym).getDate())===todayStr()){
     h+=`<section class="card"><span class="tag ok" style="display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px">Hoje</span>
       <h2 style="margin-bottom:6px">Último dia útil do mês</h2><p class="hint" style="margin-bottom:12px">Hora de fechar ${esc(monthLabel().toLowerCase())}: confira se registrou tudo e veja as dicas do mês.</p>
@@ -959,6 +959,7 @@ function vAjustes(c){
       <input id="ncn" type="text" maxlength="24" placeholder="Ex.: Pets, Viagem, Freelance" autocomplete="off">
       <select id="ncg" aria-label="Tipo da nova categoria"><option value="need">Gasto · necessidade</option><option value="want">Gasto · desejo</option><option value="in">Entrada</option><option value="inv">Investimento</option></select>
       <button class="primary" data-act="addcat">Adicionar categoria</button></div></details></section>`;
+  h+=installCard();
   h+=pushCard();
   h+=backupCard();
   const n=S.tx.length;
@@ -1034,7 +1035,8 @@ function render(){
   const main=$('#main');
   ensureRecs();
   const needName=S.cfgLoaded&&!S.cfg.name;
-  document.body.classList.toggle('welcome',needName||!!S.pendRem);
+  document.body.classList.toggle('welcome',needName||!!S.pendRem||!!S.install);
+  if(S.install){main.innerHTML=vInstall();return}
   if(needName){main.innerHTML=vWelcome();return}
   if(S.pendRem){main.innerHTML=vRemind();return}
   if(!S.loaded||!S.cfgLoaded){main.innerHTML='<p class="hint" style="padding:40px 4px">Carregando seus lançamentos…</p>';return}
@@ -1531,7 +1533,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 16</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 17</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1704,6 +1706,90 @@ document.addEventListener('click',async e=>{
   }
 });
 pushInit();
+/* passo a passo para instalar o app, mostrado a quem abre o link pelo navegador */
+const inst={step:0,deferred:null};
+const instSkipped=()=>{try{return sessionStorage.getItem('mbSkipInst')==='1'}catch(e){return false}};
+S.install=!isStandalone()&&!instSkipped();
+function instEnv(){
+  const ua=navigator.userAgent||'',ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(ios){
+    if(/FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok|; wv\)/.test(ua)||!/Safari\//.test(ua))return 'ios-inapp';
+    return /CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua)?'ios-other':'ios-safari';
+  }
+  if(/Android/.test(ua))return 'android';
+  return 'desktop';
+}
+const IA={
+  share:'<span class="iart-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M7 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></span>',
+  addhome:'<span class="iart-row">Adicionar à Tela de Início<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg></span>',
+  confirm:'<span class="iart-btn">Adicionar</span>',
+  icon:'<img src="icon-v2-192.png" width="88" height="88" alt="" style="border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.2)">',
+  dots:'<span class="iart-pill"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span>',
+  install:'<span class="iart-row">Instalar app<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg></span>',
+  link:'<span class="iart-row">Copiar link<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></span>'
+};
+function instSteps(){
+  const env=instEnv(),end={t:'Abra pelo ícone',d:'Feche esta página e abra o <b>Meu Bolso</b> pelo ícone, com internet. Daí ele funciona até sem internet.',art:'icon'};
+  const safari=[
+    {t:'Toque em Compartilhar',d:'É o botão com um quadrado e uma seta para cima, na barra de baixo do Safari.',art:'share'},
+    {t:'Adicionar à Tela de Início',d:'Role a lista para cima e toque em <b>Adicionar à Tela de Início</b>.',art:'addhome'},
+    {t:'Toque em Adicionar',d:'No canto de cima, à direita. O ícone do bolso aparece na sua Tela de Início.',art:'confirm'},
+    end
+  ];
+  if(env==='ios-safari')return safari;
+  if(env==='ios-other'||env==='ios-inapp')return [{t:'Abra no Safari',d:env==='ios-inapp'?'Este navegador não instala apps. Copie o link, abra o <b>Safari</b> e cole na barra de endereço.':'O jeito mais seguro de instalar é pelo <b>Safari</b>. Copie o link, abra o Safari e cole na barra de endereço.',art:'link',btn:['instcopy','Copiar link']},...safari];
+  if(env==='android'){
+    const first=inst.deferred
+      ?{t:'Toque em Instalar',d:'O navegador já pode instalar o app para você.',art:'install',btn:['instprompt','Instalar agora']}
+      :{t:'Abra o menu',d:'Toque nos três pontinhos, no canto de cima do navegador.',art:'dots'};
+    return [first,...(inst.deferred?[]:[{t:'Instalar app',d:'Toque em <b>Instalar app</b> (ou <b>Adicionar à tela inicial</b>).',art:'install'}]),{t:'Confirme',d:'Toque em <b>Instalar</b>. O ícone aparece junto dos seus outros apps.',art:'confirm'},end];
+  }
+  return [
+    {t:'Melhor no celular',d:'O Meu Bolso foi feito para o celular. Copie o link e abra no navegador do seu telefone.',art:'link',btn:['instcopy','Copiar link']},
+    {t:'Siga os passos no celular',d:'No iPhone, use o <b>Safari</b> e toque em <b>Compartilhar</b> e em <b>Adicionar à Tela de Início</b>. No Android, abra o menu e toque em <b>Instalar app</b>.',art:'addhome'}
+  ];
+}
+function vInstall(){
+  const st=instSteps();inst.step=Math.min(inst.step,st.length-1);
+  const s=st[inst.step],n=st.length,last=inst.step===n-1;
+  return `<section class="boas inst"><p class="lbl">Meu Bolso</p>
+    <h1>Instale no seu celular</h1>
+    <p class="hint">Leva um minuto e o app passa a abrir pelo ícone, em tela cheia e até sem internet.</p>
+    <div class="wiz" role="group" aria-label="Passo ${inst.step+1} de ${n}">
+      <div class="dots" aria-hidden="true">${st.map((_,i)=>`<i class="${i<inst.step?'done':i===inst.step?'now':''}"></i>`).join('')}</div>
+      <p class="wk">Passo ${inst.step+1} de ${n}</p>
+      <div class="iart" aria-hidden="true">${IA[s.art]||''}</div>
+      <h3>${s.t}</h3><p class="wd">${s.d}</p>
+      ${s.btn?`<div class="acts2" style="margin-top:10px"><button class="ghost" data-act="${s.btn[0]}">${s.btn[1]}</button></div>`:''}
+      <div class="wnav">${inst.step>0?'<button class="ghost" data-act="instback">Voltar</button>':'<span></span>'}
+        <button class="primary" data-act="${last?'instskip':'instnext'}">${last?'Entendi':'Próximo'}</button></div>
+    </div>
+    <button class="ghost" style="width:100%;margin-top:6px" data-act="instskip">Continuar no navegador por enquanto</button>
+    <p class="hint" style="font-size:.82rem">O que você registrar no navegador não passa para o app instalado. Para não perder nada, comece a registrar só depois de abrir pelo ícone.</p></section>`;
+}
+function installCard(){
+  if(isStandalone())return '';
+  return `<section class="card"><h2>Instalar o app</h2><p class="hint">Abra o Meu Bolso pelo ícone da Tela de Início para usar sem internet e receber notificações.</p><button class="primary full" style="margin-top:12px" data-act="installguide">Ver como instalar</button></section>`;
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst.deferred=e;if(S.install)render()});
+window.addEventListener('appinstalled',()=>{inst.deferred=null;toast('Instalado! Abra o Meu Bolso pelo ícone.')});
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act;
+  if(a==='installguide'){inst.step=0;S.install=true;render();window.scrollTo(0,0)}
+  else if(a==='instnext'){inst.step++;render()}
+  else if(a==='instback'){inst.step=Math.max(0,inst.step-1);render()}
+  else if(a==='instskip'){try{sessionStorage.setItem('mbSkipInst','1')}catch(err){}S.install=false;render();window.scrollTo(0,0)}
+  else if(a==='instcopy'){
+    const ok=()=>toast('Link copiado.'),fail=()=>toast('Não consegui copiar. Copie o endereço na barra do navegador.');
+    try{navigator.clipboard.writeText(APP_URL).then(ok,fail)}catch(err){fail()}
+  }
+  else if(a==='instprompt'&&inst.deferred){
+    try{inst.deferred.prompt();await inst.deferred.userChoice}catch(err){}
+    inst.deferred=null;render();
+  }
+});
+(()=>{const s=document.createElement('style');s.textContent='.inst{justify-content:flex-start;padding-top:28px}.iart{display:grid;place-items:center;min-height:110px;margin:4px 0 14px;border-radius:16px;background:var(--fill);padding:18px;color:var(--ink)}.iart svg{width:26px;height:26px}.iart-pill{display:grid;place-items:center;width:72px;height:56px;border-radius:28px;background:var(--surface);box-shadow:var(--shadow);color:var(--accent)}.iart-pill svg{width:30px;height:30px}.iart-row{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:300px;background:var(--surface);box-shadow:var(--shadow);border-radius:14px;padding:14px 16px;font-weight:600}.iart-btn{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:10px 22px;font-weight:700}';document.head.append(s)})();
 
 start();
 })();
