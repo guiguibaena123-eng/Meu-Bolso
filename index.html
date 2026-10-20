@@ -323,7 +323,13 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .fab{right:16px;bottom:calc(var(--barb) + var(--barh) + 14px);height:56px;padding:0 22px 0 18px;font-size:1rem;
   box-shadow:0 10px 26px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.12)}
 .fab:active{transform:scale(.95)}
-.fab.away{transform:translateY(calc(var(--barh) + 120px))}
+/* ao rolar para baixo, o botão desce até a barra de abas, entra por trás dela e só então some; ao rolar para cima sobe do mesmo lugar */
+.fab{z-index:5}
+.fab.away{transform:translateY(calc(var(--barh)/2 + 42px))}
+@media (prefers-reduced-motion:no-preference){
+  .fab{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+  .fab.away{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .2s ease .3s}
+}
 #toast{bottom:calc(var(--barb) + var(--barh) + 84px);border-radius:16px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 
 /* folha de lançamento */
@@ -1406,7 +1412,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 13</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 14</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
