@@ -797,8 +797,9 @@ function render(){
   const main=$('#main');
   ensureRecs();
   const needName=S.cfgLoaded&&!S.cfg.name;
-  document.body.classList.toggle('welcome',needName);
+  document.body.classList.toggle('welcome',needName||!!S.pendRem);
   if(needName){main.innerHTML=vWelcome();return}
+  if(S.pendRem){main.innerHTML=vRemind();return}
   if(!S.loaded||!S.cfgLoaded){main.innerHTML='<p class="hint" style="padding:40px 4px">Carregando seus lançamentos…</p>';return}
   const c=calc(S.tx),p=calc(S.prevTx);
   main.innerHTML=S.tab==='resumo'?vResumo(c,p):S.tab==='extrato'?vExtrato():S.tab==='metas'?vMetas(c):vDicas(c,p);
@@ -1154,7 +1155,7 @@ document.addEventListener('submit',e=>{
   e.preventDefault();
   const n=cap($('#nm').value.trim().replace(/\s+/g,' ').slice(0,30));
   if(!n){$('#nmerr').textContent='Digite seu nome para entrar.';$('#nm').focus();return}
-  S.cfg={...S.cfg,name:n};saveCfg();render();window.scrollTo(0,0);
+  S.cfg={...S.cfg,name:n};S.pendRem=true;saveCfg();render();window.scrollTo(0,0);
 });
 document.addEventListener('toggle',e=>{if(e.target.id==='dnames')S.namesOpen=e.target.open},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)dismissSheet()});
@@ -1254,7 +1255,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 10</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 11</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1341,6 +1342,20 @@ document.addEventListener('click',e=>{
   }
 });
 (()=>{const s=document.createElement('style');s.textContent='.wiz{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}.wiz .dots{display:flex;gap:6px;margin-bottom:12px}.wiz .dots i{flex:1;height:5px;border-radius:3px;background:var(--line)}.wiz .dots i.done{background:var(--accent);opacity:.45}.wiz .dots i.now{background:var(--accent)}.wiz .wk{margin:0;font-size:12px;color:var(--muted);font-weight:600}.wiz h3{margin:4px 0 8px;font-size:19px;line-height:1.25}.wiz .wd{margin:0;font-size:15px;line-height:1.5}.wiz .wbig{margin:0 0 8px;padding:12px 14px;border-radius:12px;background:var(--card,#fff);border:1px dashed var(--accent);font-size:16px;font-weight:700;line-height:1.35}.wiz .acts2{margin:8px 0 0}.wiz .wnav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}.wiz .wnav .primary{flex:1;max-width:60%}';document.head.append(s)})();
+/* depois do nome: convida a ativar o lembrete mensal (uma vez só) */
+function vRemind(){
+  return `<section class="boas"><p class="lbl">Meu Bolso</p>
+    <h1>Ative seu lembrete, ${esc(S.cfg.name)}</h1>
+    <p class="hint">Todo último dia útil do mês o iPhone te avisa, às 9h, para fechar o mês. Leva um toque.</p>
+    <a class="primary full" style="display:block;text-align:center;text-decoration:none;margin-top:18px" href="${remWebcal()}">Ativar lembrete</a>
+    <p class="hint" style="margin-top:10px">Se aparecer <b>Assinar calendário</b>, toque em <b>Assinar</b> e depois volte aqui pelo ícone do app.</p>
+    <button class="ghost" type="button" data-act="remdone" style="margin-top:14px;width:100%">Continuar</button>
+    <p class="hint" style="margin-top:8px">Você também pode ativar depois, em Metas.</p></section>`;
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('[data-act=remdone]'))return;
+  S.pendRem=false;render();window.scrollTo(0,0);
+});
 
 start();
 })();
