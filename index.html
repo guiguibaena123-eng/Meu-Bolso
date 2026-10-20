@@ -710,18 +710,27 @@ function vMetas(c){
       <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
   const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
   h+=`<section class="card"><h2>Lembrete no iPhone</h2>
-    <p class="hint">Próximo último dia útil: <b>${esc(prox.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</b>. Crie um aviso que se repete todo mês nesse dia, direto no app Calendário.</p>
-    <label class="hint" for="remh" style="display:block;margin:12px 0 6px">Horário do aviso</label>
+    <p class="hint">Crie um aviso que toca todo mês no <b>último dia útil</b>. Leva menos de 1 minuto e só precisa ser feito uma vez. Siga os passos no app <b>Calendário</b>:</p>
+    <ol class="steps">
+      <li><b>Abra o Calendário</b> e toque em <b>+</b> (canto de cima, à direita).</li>
+      <li><b>Título:</b> escreva <b>Fechar o mês no Meu Bolso</b>.
+        <div class="acts2" style="margin-top:8px"><button class="ghost" data-act="copytitle">Copiar título</button></div></li>
+      <li><b>Dia inteiro:</b> deixe <b>desligado</b>. Em <b>Início</b>, escolha o dia <b>${esc(prox.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</b>, às <b>9:00</b> (ou o horário que preferir).</li>
+      <li>Toque em <b>Repetir</b>, depois em <b>Personalizar</b>.</li>
+      <li>Em <b>Frequência</b>, escolha <b>Mensalmente</b>.</li>
+      <li>Abaixo, troque de <b>Cada</b> para <b>Todo mês no(a)</b> (a segunda opção da lista).</li>
+      <li>Escolha <b>Último</b> e, ao lado, <b>Dia da semana</b> (é Segunda a Sexta). Não escolha um dia específico como "sexta-feira".</li>
+      <li>Toque em <b>Voltar</b> (canto de cima, à esquerda) e depois em <b>Alerta</b> e escolha <b>Na hora do evento</b>.</li>
+      <li>Toque em <b>Notas</b> e cole o link do app.
+        <div class="acts2" style="margin-top:8px"><button class="ghost" data-act="copyurl">Copiar link do app</button></div></li>
+      <li>Toque em <b>Adicionar</b> (canto de cima, à direita). Pronto: o aviso aparece todo mês.</li>
+    </ol>
+    <p class="hint">Os nomes podem variar um pouco conforme a versão do iOS. Ao abrir o app por esse aviso, o Resumo mostra a previsão do mês seguinte.</p>
+    <details style="margin-top:10px"><summary class="sum">Tentar criar automaticamente</summary>
+    <label class="hint" for="remh" style="display:block;margin:10px 0 6px">Horário do aviso</label>
     <select id="remh" aria-label="Horário do aviso">${[8,9,10,12,18,20].map(x=>`<option value="${x}"${x===9?' selected':''}>${x}h</option>`).join('')}</select>
-    <div class="acts2" style="margin-top:12px"><button class="ghost" data-act="remind">Criar lembrete no Calendário</button></div>
-    <p class="hint" style="margin-top:10px">Vai abrir a tela de compartilhar do iPhone. Escolha <b>Calendário</b> e confirme em <b>Adicionar</b>. O aviso toca na hora marcada, no último dia útil de cada mês, e ao abrir o app o Resumo mostra a previsão do mês seguinte.</p>
-    <details style="margin-top:8px"><summary class="sum">Não apareceu o Calendário? Faça manualmente</summary>
-    <ol class="hint" style="margin:10px 0 0;padding-left:20px;display:grid;gap:6px">
-      <li>Abra o app <b>Calendário</b> e toque em <b>+</b>.</li>
-      <li>Título: <b>Fechar o mês no Meu Bolso</b>.</li>
-      <li>Em <b>Repetir</b>, escolha <b>Personalizar</b>, depois <b>Mensalmente</b> e a opção do <b>último dia útil</b> (ou "último dia da semana").</li>
-      <li>Em <b>Alerta</b>, escolha <b>Na hora do evento</b>.</li>
-    </ol></details></section>`;
+    <div class="acts2" style="margin-top:10px"><button class="ghost" data-act="remind">Criar arquivo do lembrete</button></div>
+    <p class="hint" style="margin-top:8px">Gera um arquivo que o iPhone pode abrir no Calendário. Em alguns aparelhos o Calendário não aparece nas opções; nesse caso use o passo a passo acima.</p></details></section>`;
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
   h+=`<section class="card"><details id="dnames"${S.namesOpen?' open':''}><summary class="sum">Nomes das categorias</summary><p class="hint" style="margin:10px 0 8px">Renomeie qualquer categoria ou crie as suas. Apagar o nome volta ao original.</p>`+
@@ -1331,6 +1340,12 @@ async function doRemind(){
   toast('Arquivo salvo. Abra-o para adicionar ao Calendário.');
 }
 document.addEventListener('click',e=>{if(e.target.closest('[data-act=remind]'))doRemind()});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('[data-act=copytitle]'))return;
+  const ok=()=>toast('Título copiado.'),fail=()=>toast('Não consegui copiar. Digite: Fechar o mês no Meu Bolso');
+  try{navigator.clipboard.writeText('Fechar o mês no Meu Bolso').then(ok,fail)}catch(err){fail()}
+});
+(()=>{const s=document.createElement('style');s.textContent='ol.steps{list-style:none;counter-reset:st;margin:12px 0;padding:0;display:grid;gap:10px}ol.steps>li{counter-increment:st;position:relative;padding-left:38px;min-height:28px;font-size:14px;line-height:1.45}ol.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--accent,#0B7A5E);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}';document.head.append(s)})();
 
 start();
 })();
