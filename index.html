@@ -959,6 +959,7 @@ function vAjustes(c){
       <input id="ncn" type="text" maxlength="24" placeholder="Ex.: Pets, Viagem, Freelance" autocomplete="off">
       <select id="ncg" aria-label="Tipo da nova categoria"><option value="need">Gasto · necessidade</option><option value="want">Gasto · desejo</option><option value="in">Entrada</option><option value="inv">Investimento</option></select>
       <button class="primary" data-act="addcat">Adicionar categoria</button></div></details></section>`;
+  h+=pushCard();
   h+=backupCard();
   const n=S.tx.length;
   h+=`<section class="card"><h2>Recomeçar do zero</h2><p class="hint" style="margin-bottom:12px">Errou no começo ou quer registrar tudo de novo? Apague e comece limpo.</p>`;
@@ -1530,7 +1531,7 @@ function backupCard(){
   return `<section class="card"><h2>Backup dos dados</h2>
     <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 15</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 16</p></section>`;
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -1631,6 +1632,78 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('[data-act=remdone]'))return;
   S.pendRem=false;render();window.scrollTo(0,0);
 });
+/* dicas diárias de investimento: notificação do próprio app (Web Push). Quem envia todo dia é o GitHub Actions. */
+const PUSH_KEY='BLisVhIKuRcbup2Cz4EGIswYNhKAhzQ7Z3fOTpQEZYQTXBct855g5Or5Dfb9DXRVkJZsFaRmR5igTUVRuXzMZU0';
+const PUSH_SECRETS='https://github.com/guiguibaena123-eng/Meu-Bolso/settings/secrets/actions/new';
+const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const PUSH={perm:'default',sub:null,step:0,ready:false};
+const keyBytes=b=>{const s=(b+'='.repeat((4-b.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'),r=atob(s);return Uint8Array.from(r,c=>c.charCodeAt(0))};
+async function pushInit(){
+  if(pushOk()&&isStandalone()){
+    try{PUSH.perm=Notification.permission;const reg=await navigator.serviceWorker.ready;PUSH.sub=await reg.pushManager.getSubscription()}catch(e){}
+  }
+  PUSH.ready=true;
+  if(S.tab==='ajustes'&&!typing())render();
+}
+const PUSH_STEPS=[
+  {t:'Copie o código deste aparelho',d:'Ele identifica o seu iPhone para receber as dicas.',btn:['pushcopy','Copiar código']},
+  {t:'Abra o GitHub',d:'Toque em <b>Abrir</b>. Entre na sua conta se pedir.',link:true},
+  {t:'Crie o segredo',d:'Em <b>Name</b> escreva <b>PUSH_SUBSCRIPTION</b>. Em <b>Secret</b>, cole o código. Toque em <b>Add secret</b>.'},
+  {t:'Teste',d:'Toque em <b>Enviar teste</b> para ver como a notificação aparece. A dica de verdade chega todo dia às 19h.',btn:['pushtest','Enviar teste'],last:true}
+];
+function pushWiz(){
+  const s=PUSH_STEPS[PUSH.step],n=PUSH_STEPS.length;
+  return `<div id="pushwiz" class="wiz" role="group" aria-label="Passo ${PUSH.step+1} de ${n}">
+    <div class="dots" aria-hidden="true">${PUSH_STEPS.map((_,i)=>`<i class="${i<PUSH.step?'done':i===PUSH.step?'now':''}"></i>`).join('')}</div>
+    <p class="wk">Passo ${PUSH.step+1} de ${n}</p>
+    <h3>${s.t}</h3>
+    <p class="wd">${s.d}</p>
+    ${s.btn?`<div class="acts2"><button class="ghost" data-act="${s.btn[0]}">${s.btn[1]}</button></div>`:''}
+    ${s.link?`<div class="acts2"><a class="ghost" style="display:inline-flex;align-items:center;text-decoration:none" href="${PUSH_SECRETS}" target="_blank" rel="noopener">Abrir GitHub</a></div>`:''}
+    <div class="wnav">${PUSH.step>0?'<button class="ghost" data-act="pushback">Voltar</button>':'<span></span>'}
+      <button class="primary" data-act="pushnext">${s.last?'Concluí':'Próximo'}</button></div></div>
+    <button class="ghost danger" style="margin-top:12px" data-act="pushoff">Desativar notificações</button>`;
+}
+function pushCard(){
+  let h='<section class="card"><h2>Dicas diárias de investimento</h2>';
+  if(!pushOk()||!isStandalone())h+='<p class="hint">Para receber as notificações, abra o app pelo ícone da Tela de Início. Precisa do iOS 16.4 ou mais novo.</p>';
+  else if(!PUSH.ready)h+='<p class="hint">Verificando…</p>';
+  else if(PUSH.perm==='denied')h+='<p class="hint">As notificações estão bloqueadas. No iPhone, abra <b>Ajustes > Notificações > Meu Bolso</b> e permita.</p>';
+  else if(!PUSH.sub)h+='<p class="hint">Uma dica curta sobre investimentos todo dia, às 19h. É conteúdo educativo, não uma recomendação personalizada.</p><button class="primary full" style="margin-top:12px" data-act="pushon">Ativar notificações</button>';
+  else h+=pushWiz();
+  return h+'</section>';
+}
+const pushPaint=()=>{const w=$('#pushwiz');if(w){const t=document.createElement('div');t.innerHTML=pushWiz();w.replaceWith(...t.childNodes)}};
+async function pushOn(){
+  try{
+    const p=await Notification.requestPermission();PUSH.perm=p;
+    if(p!=='granted'){toast(p==='denied'?'Notificações bloqueadas. Libere em Ajustes do iPhone.':'Permissão não concedida.');render();return}
+    const reg=await navigator.serviceWorker.ready;
+    PUSH.sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(PUSH_KEY)});
+    PUSH.step=0;toast('Notificações ativadas. Falta o último passo.');
+  }catch(e){toast('Não consegui ativar as notificações neste aparelho.')}
+  render();
+}
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act;
+  if(a==='pushon')pushOn();
+  else if(a==='pushnext'){if(PUSH.step>=PUSH_STEPS.length-1){PUSH.step=0;toast('Pronto! A primeira dica chega às 19h.')}else PUSH.step++;pushPaint()}
+  else if(a==='pushback'){PUSH.step=Math.max(0,PUSH.step-1);pushPaint()}
+  else if(a==='pushcopy'){
+    const ok=()=>toast('Código copiado. Cole no GitHub, no passo 3.'),fail=()=>toast('Não consegui copiar o código.');
+    try{navigator.clipboard.writeText(JSON.stringify(PUSH.sub.toJSON())).then(ok,fail)}catch(err){fail()}
+  }
+  else if(a==='pushtest'){
+    try{const reg=await navigator.serviceWorker.ready;await reg.showNotification('Dica de investimento',{body:'Teste: assim a dica do dia vai aparecer.',icon:'icon-v2-192.png',badge:'icon-v2-192.png',tag:'teste'});toast('Teste enviado. Olhe a tela de notificações.')}
+    catch(err){toast('Não consegui mostrar a notificação de teste.')}
+  }
+  else if(a==='pushoff'){
+    try{if(PUSH.sub)await PUSH.sub.unsubscribe()}catch(err){}
+    PUSH.sub=null;PUSH.step=0;render();toast('Notificações desativadas neste aparelho.');
+  }
+});
+pushInit();
 
 start();
 })();

@@ -44,3 +44,15 @@ Se o `index.html` mudar, abra o arquivo `sw.js`, troque `meu-bolso-v1` por `meu-
 - `index.html`: o app
 - `sw.js`: guarda o app no aparelho para abrir offline
 - `manifest.webmanifest`, `icon-v2-192.png`, `icon-v2-512.png`, `apple-touch-icon-v2.png`: instalação e ícone
+
+## 5. Dicas diárias de investimento (notificação)
+
+Uma dica curta chega todo dia às 19h (Brasília), como notificação do app. Quem envia é o GitHub Actions (`.github/workflows/dica-diaria.yml`), e as dicas ficam em `push/dicas.json`.
+
+Configuração, uma vez só:
+1. No GitHub, abra o repositório > **Settings > Secrets and variables > Actions > New repository secret**.
+2. Crie o segredo **VAPID_PRIVATE_KEY** com o conteúdo do arquivo `Documentos\MeuBolso-segredos\chave-privada.txt`. Nunca coloque esse arquivo dentro desta pasta.
+3. No iPhone, em **Ajustes > Dicas diárias de investimento**, toque em **Ativar notificações** e siga os passos: o último cria o segredo **PUSH_SUBSCRIPTION**.
+4. Para testar na hora: GitHub > **Actions > Dica diária > Run workflow**.
+
+Se trocar de iPhone ou apagar o app, ative de novo e atualize o segredo PUSH_SUBSCRIPTION.
