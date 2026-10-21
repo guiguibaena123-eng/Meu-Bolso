@@ -683,6 +683,26 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .ktile .kt i{display:block;height:100%;background:#fff;border-radius:3px}
 .kcard{overflow:hidden}
 .kscroll{padding-bottom:18px;margin-bottom:-8px}
+/* extrato por cartão */
+.ktabs{display:flex;gap:6px;overflow-x:auto;margin:4px -16px 0;padding:2px 16px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.ktabs::-webkit-scrollbar{display:none}
+.ktab{flex:none;scroll-snap-align:center;display:inline-flex;align-items:center;gap:0;border:0;border-radius:999px;padding:9px 14px;font-size:.92rem;font-weight:600;white-space:nowrap;background:var(--fill);color:var(--ink);min-height:40px;transition:background .25s ease,color .25s ease,transform .15s ease,box-shadow .25s ease}
+.ktab:active{transform:scale(.95)}
+.ktab .kdot{margin-right:7px}
+.ktab .cn{margin-left:7px;font-size:.78rem;opacity:.7;font-variant-numeric:tabular-nums}
+.ktab[aria-selected="true"]{background:var(--ink);color:var(--bg);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.ktab[aria-selected="true"][style]{background-color:var(--kc);color:var(--kf);background-image:linear-gradient(145deg,rgba(255,255,255,.18),rgba(0,0,0,.2))}
+.ktab[aria-selected="true"] .kdot{background:var(--kf)!important;box-shadow:none}
+.mhero.kc{background-color:var(--kc);background-image:linear-gradient(145deg,rgba(255,255,255,.2),rgba(0,0,0,.26));color:var(--kf);box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.mhero.kc .msub{color:var(--kf);opacity:.85}
+.mhero.kc .exrow small{color:var(--kf);opacity:.8}
+.mhero.kc .exrow .main{background:rgba(255,255,255,.18)}
+.mhero.kc .exrow b{color:var(--kf)}
+.kbar{height:7px;border-radius:4px;background:rgba(127,127,127,.35);margin-top:14px;overflow:hidden}
+.kbar i{display:block;height:100%;border-radius:4px;background:var(--kf)}
+.mhero.kc .kmsg{margin-top:6px;font-size:.82rem}
+.ktile .kt{background:rgba(127,127,127,.35)}
+.ktile .kt i{background:var(--kf,#fff)}
 </style>
 
 </head>
@@ -1301,7 +1321,7 @@ const EXKIND={gastos:'e',entradas:'i',invest:'v'};
 const brlC=v=>{const a=Math.abs(v),sg=v<0?'-':'';return a>=1e6?sg+'R$ '+(a/1e6).toFixed(1).replace('.',',')+' mi':a>=1e4?sg+'R$ '+(a/1e3).toFixed(1).replace('.',',')+' mil':brl(v)};
 function exFiltered(){
   const f=S.filter,q=(S.q||'').trim().toLowerCase();
-  return S.tx.filter(t=>(f==='todos'||t.t===EXKIND[f])&&(!S.fcard||t.k===S.fcard)&&(!q||((t.d||'')+' '+nameOf(t.c)).toLowerCase().includes(q)))
+  return S.tx.filter(t=>(f==='todos'||t.t===EXKIND[f])&&inCard(t)&&(!q||((t.d||'')+' '+nameOf(t.c)).toLowerCase().includes(q)))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
 }
 function exDay(date){
@@ -1326,7 +1346,7 @@ const BRANDS=[
   ['riachuelo','#E4002B','#fff'],['zara','#000','#fff'],['shein','#000','#fff'],['aliexpress','#E62E04','#fff'],['kabum','#0060B1','#FF6500'],
   ['latam','#E4002B','#1B0088'],['gol','#FF7020','#fff'],['airbnb','#FF5A5F','#fff'],['booking','#003B95','#fff'],['sem parar','#009DDC','#fff'],
   ['enel','#FF0000','#fff'],['sabesp','#0072BC','#fff'],['cemig','#00843D','#fff'],['copel','#009FE3','#fff'],['livelo','#E6007E','#fff'],['hotmart','#F04E23','#fff'],
-  ['duolingo','#58CC02','#fff'],['udemy','#A435F0','#fff'],['alura','#1B2F5B','#4BD5E0'],['tinder','#FE3C72','#fff'],['bumble','#FFC629','#000']
+  ['neon','#00E5FF','#000'],['next','#00FF5F','#000'],['btg|btg pactual','#001E62','#fff'],['xp|xp investimentos','#000','#FFD100'],['sicredi','#3FA535','#fff'],['sicoob','#003641','#7DB61C'],['will bank|willbank','#FFE600','#000'],['original','#00A859','#fff'],['safra','#0A2F6B','#fff'],['banrisul','#0072CE','#fff'],['duolingo','#58CC02','#fff'],['udemy','#A435F0','#fff'],['alura','#1B2F5B','#4BD5E0'],['tinder','#FE3C72','#fff'],['bumble','#FFC629','#000']
 ];
 const BRAND_LIST=BRANDS.flatMap(([keys,bg,fg])=>keys.split('|').map(k=>({k:' '+k+' ',bg,fg,ch:keys[0].toUpperCase(),id:keys.split('|')[0]})));
 const normTxt=x=>' '+String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
@@ -1388,7 +1408,7 @@ function exList(list){
     const g=groups[date],net=g.reduce((a,t)=>a+(t.t==='i'?t.v:-t.v),0);
     h+=`<section class="dia"><h3><span>${esc(exDay(date))}</span><span class="dtot">${net>=0?'+ ':'− '}${brl(Math.abs(net))}</span></h3><div class="lista">`+g.map(t=>{
       const cn=nm(t.c);
-      const kk=cardOf(t.k),sub=[t.d?esc(cn):'',kk?`<i class="kdot" style="background:${esc(kk.c)}"></i>${esc(kk.n)}`:'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · ');
+      const kk=(S.fcard&&S.fcard!=='none')?null:cardOf(t.k),sub=[t.d?esc(cn):'',kk?`<i class="kdot" style="background:${esc(kk.c)}"></i>${esc(kk.n)}`:'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · ');
       return `<div class="item"><button data-act="edit" data-id="${esc(t.id)}" aria-label="Editar ${esc(t.d||cn)}, ${brl(t.v)}">
         ${txIco(t,cn)}
         <span class="t"><b>${esc(t.d||cn)}</b>${sub?`<small>${sub}</small>`:''}</span>
@@ -1398,18 +1418,38 @@ function exList(list){
 }
 function paintEx(){const el=$('#exlist');if(el)el.innerHTML=exList(exFiltered())}
 function vExtrato(){
-  if(S.fcard&&!cardOf(S.fcard))S.fcard=null;
-  const f=S.filter,all=S.tx.length,B=S.fcard?S.tx.filter(t=>t.k===S.fcard):S.tx,c=calc(B),n=B.length,kc=cardOf(S.fcard);
+  const cs=S.cfg.cards||[];
+  if(S.fcard&&S.fcard!=='none'&&!cardOf(S.fcard))S.fcard=null;
+  const all=S.tx.length,noCard=S.tx.filter(t=>!cardOf(t.k)).length;
+  if(S.fcard==='none'&&!noCard)S.fcard=null;
+  const f=S.filter,B=S.tx.filter(inCard),c=calc(B),n=B.length,kc=cardOf(S.fcard);
   const cnt={todos:n,gastos:B.filter(t=>t.t==='e').length,entradas:B.filter(t=>t.t==='i').length,invest:B.filter(t=>t.t==='v').length};
-  if(!all)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem neste extrato.</p><button class="primary" data-act="add">Registrar</button></section>`;
+  if(!all&&!cs.length)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem neste extrato.</p><button class="primary" data-act="add">Registrar</button></section>`;
   const cell=(l,v,cls)=>`<div class="${cls||''}"><small>${l}</small><b title="${brl(v)}" aria-label="${l}: ${brl(v)}">${brlC(v)}</b></div>`;
-  let h=`<section class="mhero exhero${c.bal<0&&!kc?' neg':''}"><p class="msub" style="margin:0 0 12px">${kc?`<i class="kdot" style="background:${esc(kc.c)}"></i>${esc(kc.n)} · `:''}${n} ${n===1?'lançamento':'lançamentos'} no mês</p>
-    <div class="exrow${kc?' k3':''}">${kc?cell('Gastos no cartão',c.exp,'main')+cell('Maior gasto',Math.max(0,...B.filter(t=>t.t==='e').map(t=>t.v)))+(kc.l?cell('Limite livre',Math.max(0,kc.l-c.exp)):cell('Entradas',c.inc)):cell('Saldo',c.bal,'main')+cell('Entradas',c.inc)+cell('Gastos',c.exp)+cell('Investido',c.inv)}</div></section>
-    <div class="exq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+  const exps=B.filter(t=>t.t==='e'),maior=Math.max(0,...exps.map(t=>t.v));
+  let h='';
+  if(cs.length){
+    const tab=(k,label,dot,count,sel,style)=>`<button type="button" role="tab" class="ktab" data-act="fcard" data-k="${k}" aria-selected="${sel}"${style?` style="${style}"`:''}>${dot}${label}<span class="cn">${count}</span></button>`;
+    h+=`<div class="ktabs" role="tablist" aria-label="Extrato por cartão">`+
+      tab('','Todos','',all,!S.fcard)+
+      cs.map(k=>tab(esc(k.id),esc(k.n),`<i class="kdot" style="background:${esc(k.c)}"></i>`,S.tx.filter(t=>t.k===k.id).length,S.fcard===k.id,`--kc:${esc(k.c)};--kf:${esc(k.f)}`)).join('')+
+      (noCard&&noCard!==all?tab('none','Sem cartão','',noCard,S.fcard==='none'):'')+`</div>`;
+  }
+  const mes=esc(monthLabel().toLowerCase());
+  if(kc){
+    const u=kc.l?Math.min(100,pct(c.exp,kc.l)):0;
+    h+=`<section class="mhero exhero kc" style="--kc:${esc(kc.c)};--kf:${esc(kc.f)}"><p class="msub" style="margin:0 0 12px">${esc(kc.n)} · ${n} ${n===1?'lançamento':'lançamentos'} em ${mes}</p>
+      <div class="exrow k3">${cell('Gasto no mês',c.exp,'main')+cell('Maior gasto',maior)+(kc.l?cell('Limite livre',Math.max(0,kc.l-c.exp)):cell('Média por gasto',exps.length?c.exp/exps.length:0))}</div>
+      ${kc.l?`<div class="kbar" role="img" aria-label="${Math.round(pct(c.exp,kc.l))}% do limite usado"><i style="width:${u}%"></i></div><p class="msub kmsg">${Math.round(pct(c.exp,kc.l))}% do limite de ${brl(kc.l)}</p>`:''}</section>`;
+  }else{
+    h+=`<section class="mhero exhero${c.bal<0?' neg':''}"><p class="msub" style="margin:0 0 12px">${S.fcard==='none'?'Sem cartão · ':''}${n} ${n===1?'lançamento':'lançamentos'} em ${mes}</p>
+      <div class="exrow">${cell('Saldo',c.bal,'main')+cell('Entradas',c.inc)+cell('Gastos',c.exp)+cell('Investido',c.inv)}</div></section>`;
+  }
+  if(!n)return h+`<section class="card vazio"><h2>Nenhum lançamento aqui</h2><p>${kc?`Gastos no ${esc(kc.n)} em ${mes} aparecem neste extrato.`:'Os lançamentos aparecem aqui.'}</p><button class="primary" data-act="add">Registrar</button></section>`;
+  h+=`<div class="exq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="exq" type="search" placeholder="Buscar por nome ou categoria" value="${esc(S.q||'')}" aria-label="Buscar lançamentos" autocomplete="off" enterkeyhint="search"></div>
     <div class="chips scroll" role="group" aria-label="Filtro" style="margin-top:12px">`+
     [['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investido']].map(([k,t])=>`<button class="chip" data-act="flt" data-f="${k}" aria-pressed="${f===k}">${t} <span class="cn">${cnt[k]}</span></button>`).join('')+`</div>
-${(S.cfg.cards||[]).length?`<div class="chips scroll" role="group" aria-label="Filtrar por cartão" style="margin-top:8px">${S.cfg.cards.map(k=>`<button class="chip kchip" data-act="fcard" data-k="${esc(k.id)}" aria-pressed="${S.fcard===k.id}"><i class="kdot" style="background:${esc(k.c)}"></i>${esc(k.n)}</button>`).join('')}</div>`:''}
     <div id="exlist" aria-live="polite">${exList(exFiltered())}</div>`;
   return h;
 }
@@ -1478,10 +1518,10 @@ function vAjustes(c){
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
   const cs=S.cfg.cards||[];
   h+=acc('dcards',S.cardsOpen,'cartao','#820AD1','Meus cartões',cs.length?`${cs.length} ${cs.length===1?'cartão':'cartões'}`:'Controle gastos por cartão',
-    `<p class="hint" style="margin:0 0 8px">Ao registrar um gasto, escolha o cartão. Você vê o total de cada um no Resumo e filtra o Extrato por cartão.</p>`+
+    `<p class="hint" style="margin:0 0 8px">Cada cartão tem a cor do seu banco e o seu próprio extrato, na aba Extrato.</p>`+
     cs.map(k=>`<div class="krow"><div class="khead"><i class="kdot lg" style="background:${esc(k.c)}"></i><input type="text" maxlength="20" data-kren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome do cartão ${esc(k.n)}" autocomplete="off"></div>
       <input class="moeda" type="text" inputmode="numeric" data-klim="${esc(k.id)}" placeholder="Limite do cartão (opcional)" value="${k.l?moneyField(k.l):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off">
-      <div class="kfoot"><div class="swatches sm" role="group" aria-label="Cor do cartão">${CARD_COLS.map(c=>`<button type="button" class="sw" data-act="kcolor" data-k="${esc(k.id)}" data-v="${c}" style="background:${c}" aria-label="Cor ${c}" aria-pressed="${k.c.toUpperCase()===c}"></button>`).join('')}</div>
+      <div class="kfoot"><div class="swatches sm" role="group" aria-label="Cores de bancos">${CARD_PRESETS.map(([bn,c],i)=>`<button type="button" class="sw" data-act="kcolor" data-k="${esc(k.id)}" data-i="${i}" style="background:${c}" aria-label="Cores do ${bn}" title="${bn}" aria-pressed="${k.c.toUpperCase()===c}"></button>`).join('')}</div>
       <button class="ghost danger sm" data-act="kdel" data-id="${esc(k.id)}">Excluir</button></div></div>`).join('')+
     `<div class="novacat"><label class="hint" for="knn">Novo cartão ou conta</label><input id="knn" type="text" maxlength="20" placeholder="Ex.: Nubank, Itaú, Dinheiro" autocomplete="off"><button class="primary" data-act="kadd">Adicionar cartão</button></div>`);
   h+=acc('dnames',S.namesOpen,'tag','#3B82C4','Nomes das categorias','Renomeie ou crie as suas',
@@ -1755,11 +1795,13 @@ function resetDrag(){const sh=$('#form');sh.style.transition='';sh.style.transfo
   sb.addEventListener('touchcancel',e=>{if(mode==='drag')finish(e.timeStamp);else{y0=null;mode=null;sh.style.transition=''}});
   scrim.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 })();
-const CARD_COLS=['#820AD1','#FF7A00','#EC7000','#CC092F','#242424','#005CA9','#0B7A5E','#1F6FB2'];
+const CARD_PRESETS=[['Nubank','#820AD1','#fff'],['Inter','#FF7A00','#fff'],['Itaú','#EC7000','#003399'],['Bradesco','#CC092F','#fff'],['Santander','#EC0000','#fff'],['C6 Bank','#242424','#fff'],['Banco do Brasil','#FFEF38','#003882'],['Caixa','#005CA9','#F39200'],['PicPay','#11C76F','#fff'],['Mercado Pago','#00B1EA','#fff'],['Neon','#00E5FF','#000'],['BTG','#001E62','#fff']];
 const cardOf=id=>id?(S.cfg.cards||[]).find(c=>c.id===id):null;
+const inCard=t=>!S.fcard||(S.fcard==='none'?!cardOf(t.k):t.k===S.fcard);
 function makeCard(name){
   const b=brandOf(name),n=(S.cfg.cards||[]).length;
-  return {id:'k_'+Date.now().toString(36)+n,n:name.slice(0,20),c:b?b.bg:CARD_COLS[n%CARD_COLS.length],f:b?b.fg:'#fff',l:0};
+  const P=CARD_PRESETS[n%CARD_PRESETS.length];
+  return {id:'k_'+Date.now().toString(36)+n,n:name.slice(0,20),c:b?b.bg:P[1],f:b?b.fg:P[2],l:0};
 }
 function addCard(name){
   name=name.trim().replace(/\s+/g,' ');
@@ -1943,14 +1985,19 @@ document.addEventListener('click',e=>{
   else if(a==='cardnew'){const w=$('#cardnew');w.hidden=!w.hidden;if(!w.hidden)setTimeout(()=>$('#cnn').focus({preventScroll:false}),30)}
   else if(a==='cardcreate'){const k=addCard($('#cnn').value);if(k){S.card=k.id;$('#cnn').value='';$('#cardnew').hidden=true;paintCards();toast('Cartão criado.')}}
   else if(a==='kadd'){const k=addCard($('#knn').value);if(k){S.cardsOpen=true;render();toast('Cartão criado.')}}
-  else if(a==='kcolor'){const id=el.dataset.k;S.cfg={...S.cfg,cards:S.cfg.cards.map(c=>c.id===id?{...c,c:el.dataset.v,f:'#fff'}:c)};saveCfg();S.cardsOpen=true;render()}
+  else if(a==='kcolor'){const id=el.dataset.k;const P=CARD_PRESETS[+el.dataset.i];S.cfg={...S.cfg,cards:S.cfg.cards.map(c=>c.id===id?{...c,c:P[1],f:P[2]}:c)};saveCfg();S.cardsOpen=true;render()}
   else if(a==='kdel'){
     const id=el.dataset.id,old=S.cfg.cards;
     S.cfg={...S.cfg,cards:old.filter(c=>c.id!==id)};if(S.fcard===id)S.fcard=null;saveCfg();S.cardsOpen=true;render();
     S.undoFn=()=>{S.cfg={...S.cfg,cards:old};saveCfg();render()};
     toast('Cartão removido. Os lançamentos ficam sem cartão.',true);
   }
-  else if(a==='fcard'){S.fcard=S.fcard===el.dataset.k?null:el.dataset.k;render()}
+  else if(a==='fcard'){
+    const ids=[null,...(S.cfg.cards||[]).map(c=>c.id),'none'],nx=el.dataset.k||null;
+    const dir=ids.indexOf(nx)>ids.indexOf(S.fcard||null)?'go-r':'go-l';
+    S.fcard=nx;S.filter='todos';S.q='';render();slideMain(dir);
+    const b=document.querySelector('.ktab[aria-selected="true"]');if(b&&b.scrollIntoView)b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  }
   else if(a==='cardgo'){S.fcard=el.dataset.k;S.filter='todos';S.q='';goTab('extrato')}
   else if(a==='sug'){
     const x=(S.sugs||[])[+el.dataset.i];if(!x)return;
