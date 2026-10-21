@@ -1912,20 +1912,21 @@ document.addEventListener('change',e=>{
 /* dicas diárias de investimento: 10 dicas no Calendário, uma por dia, no horário escolhido */
 const TIP_H=Array.from({length:17},(_,i)=>i+6);
 const TIP_M=Array.from({length:12},(_,i)=>i*5);
+const TIP_HM=TIP_H.flatMap(h=>TIP_M.map(m=>[h*100+m,m?h+':'+pad(m)+'h':h+'h']));
 const tipH=()=>TIP_H.includes(S.cfg.tipH)?S.cfg.tipH:19;
 const tipM=()=>TIP_M.includes(S.cfg.tipM)?S.cfg.tipM:0;
 const tipUrl=()=>new URL('l/dica-'+pad(tipH())+pad(tipM())+'.ics',APP_URL).href.replace(/^https?:/,'webcal:');
 function tipsCard(){
   return `<section class="card"><h2>Dicas diárias de investimento</h2>
     <p class="hint">Uma dica curta por dia, em um ciclo de 50 dicas que recomeça sozinho. Chega como aviso do Calendário. É conteúdo educativo, não uma recomendação personalizada.</p>
-    <label class="hint" for="tiph" style="margin-top:12px">Horário do aviso (de 5 em 5 minutos)</label>
-    <div style="display:flex;gap:10px"><select id="tiph" aria-label="Hora" style="flex:1">${remOpts(TIP_H.map(x=>[x,pad(x)+'h']),tipH())}</select><select id="tipm" aria-label="Minuto" style="flex:1">${remOpts(TIP_M.map(x=>[x,pad(x)+' min']),tipM())}</select></div>
+    <label class="hint" for="tiph" style="margin-top:12px">Horário do aviso</label>
+    <select id="tiph">${remOpts(TIP_HM,tipH()*100+tipM())}</select>
     <div class="acts2" style="margin-top:12px"><a class="primary" style="display:inline-flex;align-items:center;text-decoration:none" href="${tipUrl()}">Ativar no Calendário</a></div>
     <p class="hint" style="margin-top:12px">Se você mudar o horário depois de ativar, apague o antigo: abra o <b>Calendário</b> > <b>Calendários</b>, toque no <b>ⓘ</b> do calendário "Meu Bolso · Dicas" e em <b>Cancelar assinatura</b>.</p></section>`;
 }
 document.addEventListener('change',e=>{
-  const id=e.target.id;if(id!=='tiph'&&id!=='tipm')return;
-  S.cfg={...S.cfg,[id==='tiph'?'tipH':'tipM']:+e.target.value};saveCfg();render();
+  if(e.target.id!=='tiph')return;
+  const v=+e.target.value;S.cfg={...S.cfg,tipH:Math.floor(v/100),tipM:v%100};saveCfg();render();
 });
 /* passo a passo para instalar o app, mostrado a quem abre o link pelo navegador */
 const inst={step:0,deferred:null};
