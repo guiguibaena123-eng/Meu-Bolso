@@ -174,6 +174,57 @@ input.moeda{text-align:right}
 .tipd .tb p{color:var(--muted);font-size:.96rem}
 .ghost.sm{min-height:40px;padding:8px 14px;font-size:.92rem}
 
+
+.card.tipd{padding:0}
+/* acabamento profissional: metas e dicas */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mhero{background:linear-gradient(155deg,var(--hero-a,#0B7A5E) 0%,var(--hero-b,#07503C) 100%);color:#fff;border-radius:26px;padding:20px 18px 18px;margin-top:6px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.mhero .lbl{color:rgba(255,255,255,.78)}
+.mtop{display:flex;align-items:center;gap:16px}
+.mtxt{min-width:0}
+.mbig{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,8vw,2.2rem);letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.msub{color:rgba(255,255,255,.82);font-size:.92rem;margin-top:4px}
+.mlbl{margin-top:18px;font-size:.95rem;color:rgba(255,255,255,.9)}
+.mlbl b{font-family:var(--font-display);font-size:1.15rem}
+.mring{position:relative;width:92px;height:92px;flex:none}
+.mring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.mring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.mring .bg{stroke:rgba(255,255,255,.22)}
+.mring .fg{stroke:#fff;stroke-dasharray:var(--c);stroke-dashoffset:var(--o)}
+.mring span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:1.2rem;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){.mring .fg{animation:ringIn .9s cubic-bezier(.22,1,.36,1)}}
+@keyframes ringIn{from{stroke-dashoffset:var(--c)}}
+.mhero .chips{margin:10px 0 0}
+.mhero .chip{background:rgba(255,255,255,.16);color:#fff}
+.mhero .chip[aria-pressed="true"]{background:#fff;color:var(--hero-b,#07503C);font-weight:600}
+.mhero .slider{accent-color:#fff;margin:12px 0 2px}
+.dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 10px}
+.dstats div{background:rgba(255,255,255,.16);border-radius:14px;padding:10px 12px}
+.dstats b{display:block;font-family:var(--font-display);font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.dstats small{color:rgba(255,255,255,.82);font-size:.78rem}
+.ic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:.9rem;line-height:1}
+.ic.alert{background:var(--alert-bg);color:var(--alert-fg)}
+.ic.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.ic.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.ic.info{background:var(--info-bg);color:var(--info-fg)}
+.tipd{border-radius:20px;overflow:hidden}
+.tipd summary:active{background:var(--fill)}
+.tipd .tb{border-top:.5px solid var(--line);padding-top:12px;margin:0 16px;padding-left:0;padding-right:0}
+.tipd[open]>summary{padding-bottom:12px}
+.tipd .tb .ghost{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.pl{flex:none;font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px}
+.pl.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.pl.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.pl.over{background:var(--alert-bg);color:var(--alert-fg)}
+.lim{position:relative}
+.lim::before{content:"";position:absolute;top:0;left:0;right:0;border-top:.5px solid var(--line)}
+.lim{border-top:0}
+.lim:first-of-type::before{display:none}
+.limhead:active .n b{opacity:.6}
+.limed{background:var(--fill);border-radius:16px;padding:12px;margin:0 0 12px}
+.limed input.moeda{background:var(--surface)}
+.limed .chip{background:var(--surface)}
+.limed .chip[aria-pressed="true"]{background:var(--accent)}
 /* dicas */
 .dica{margin-top:12px}
 .dica .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px}
@@ -1080,22 +1131,21 @@ function vExtrato(){
 }
 
 function vMetas(c){
-  const pc=S.cfg.savePct,goal=c.inc*pc/100,got=c.saved,ok=goal>0&&got>=goal;
-  let h=`<section class="card"><h2>Quanto guardar por mês</h2>
-    <div class="chips" role="group" aria-label="Percentual da renda a guardar" style="margin:10px 0 0">${[5,10,15,20,30].map(v=>`<button class="chip" data-act="savepct" data-v="${v}" aria-pressed="${pc===v}">${v}%</button>`).join('')}</div>
+  const pc=S.cfg.savePct,goal=c.inc*pc/100,got=c.saved,ok=goal>0&&got>=goal,frac=goal>0?Math.min(1,got/goal):0,CI=2*Math.PI*44;
+  let h=`<section class="mhero"><div class="mtop"><div class="mring" role="img" aria-label="${Math.round(frac*100)}% da meta"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="bg"/><circle cx="50" cy="50" r="44" class="fg" style="--c:${CI.toFixed(1)};--o:${(CI*(1-frac)).toFixed(1)}"/></svg><span>${Math.round(frac*100)}%</span></div>
+    <div class="mtxt"><p class="lbl">Guardado em ${esc(monthLabel().toLowerCase())}</p><p class="mbig">${brl(got)}</p>
+    <p class="msub">${goal>0?(ok?`Meta de ${brl(goal)} batida`:`Faltam ${brl(goal-got)} para ${brl(goal)}`):(c.inc>0?'Sem meta de economia':'Registre sua renda para ver a meta')}</p></div></div>
+    <p class="mlbl">Guardar <b><span id="pctv">${pc}</span>%</b> da renda</p>
+    <div class="chips" role="group" aria-label="Percentual da renda a guardar">${[5,10,15,20,30].map(v=>`<button class="chip" data-act="savepct" data-v="${v}" aria-pressed="${pc===v}">${v}%</button>`).join('')}</div>
     <input class="slider" id="sl" type="range" min="0" max="50" step="5" value="${pc}" aria-label="Percentual da renda a guardar">
-    <p style="font-size:1.5rem;font-family:var(--font-display);font-weight:700;letter-spacing:-.02em"><span id="pctv">${pc}</span>% da renda</p>`;
-  if(c.inc>0&&goal>0){
-    h+=`<div class="track" style="margin-top:12px"><i style="width:${Math.min(100,pct(got,goal))}%"></i></div>
-      <p class="hint" id="pcth" style="margin-top:8px">${ok?`Meta batida: você guardou ${brl(got)} de ${brl(goal)}.`:`Guardado ${brl(got)} de ${brl(goal)}. Faltam ${brl(goal-got)}.`}</p>`;
-  }else h+=`<p class="hint" id="pcth" style="margin-top:8px">${c.inc>0?'Sem meta de economia neste mês.':'Registre sua renda do mês para ver o valor em reais.'}</p>`;
-  h+=`<details style="margin-top:12px"><summary class="sum">Quanto é o ideal?</summary><p class="hint" style="margin-top:8px">Referência comum: 20% ou mais. Se hoje está difícil, comece com 5% ou 10% e suba aos poucos. Investimentos registrados e o que sobra na conta contam para a meta.</p></details></section>`;
+    <p class="msub" id="pcth">${c.inc>0?`Em ${esc(monthLabel().toLowerCase())}, isso são ${brl(goal)}.`:'Registre sua renda do mês para ver o valor em reais.'}</p></section>
+    <details class="card tipd"><summary><span class="ic info" aria-hidden="true">i</span><b>Quanto guardar é o ideal?</b></summary><div class="tb"><p>Referência comum: 20% ou mais. Se hoje está difícil, comece com 5% ou 10% e suba aos poucos. Investimentos registrados e o que sobra na conta contam para a meta.</p></div></details>`;
   const cats=allCats('e').map(k=>({k,v:c.by[k.id]||0,lim:S.cfg.limits[k.id]}));
   const row=({k,v,lim})=>{
     const open=S.limOpen===k.id,over=lim&&v>lim;
     let r=`<div class="lim${open?' open':''}"><button type="button" class="limhead" data-act="limopen" data-id="${esc(k.id)}" aria-expanded="${open}">
       <span class="n"><b>${esc(k.n)}</b><small>${lim?(over?`passou ${brl(v-lim)} · limite ${brl(lim)}`:`${brl(v)} de ${brl(lim)} · restam ${brl(lim-v)}`):(v>0?`gasto ${brl(v)} · sem limite`:'sem gasto · sem limite')}</small>
-      ${lim?`<span class="track"><i class="${over?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></span>`:''}</span><span class="car" aria-hidden="true"></span></button>`;
+      ${lim?`<span class="track"><i class="${over?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></span>`:''}</span>${lim?`<span class="pl ${over?'over':v>lim*.8?'warn':'ok'}">${over?'Passou':v>lim*.8?'Perto':'Ok'}</span>`:''}<span class="car" aria-hidden="true"></span></button>`;
     if(open){
       const sug=[...new Set([v>0?Math.ceil(v*1.1/50)*50:0,100,200,300,500,1000].filter(x=>x>0))].slice(0,5);
       r+=`<div class="limed"><div class="chips" style="margin:0 0 10px">${sug.map(x=>`<button class="chip" data-act="limset" data-id="${esc(k.id)}" data-v="${x}" aria-pressed="${lim===x}">${brl(x).replace(/,00$/,'')}</button>`).join('')}${lim?`<button class="chip" data-act="limset" data-id="${esc(k.id)}" data-v="0">Sem limite</button>`:''}</div>
@@ -1184,20 +1234,22 @@ const actFor=t=>/renda|investimento|Poucos|Comece/.test(t.t)?['add','Registrar a
 function vDicas(c,p){
   const list=tips(c,p),n={alert:0,warn:0};list.forEach(t=>{if(n[t.lv]!==undefined)n[t.lv]++});
   const first=list.findIndex(t=>t.lv==='alert'||t.lv==='warn'),ml=esc(monthLabel().toLowerCase());
-  let h=`<section class="card"><h2>${n.alert?'Precisa de atenção':n.warn?'Quase lá':'Tudo em ordem'}</h2>
-    <p class="hint" style="margin-top:4px">${n.alert||n.warn?[n.alert?`${n.alert} ${n.alert>1?'alertas':'alerta'}`:'',n.warn?`${n.warn} ${n.warn>1?'pontos de atenção':'ponto de atenção'}`:''].filter(Boolean).join(' e ')+' em '+ml+'. Toque numa dica para ver o que fazer.':'Nada urgente em '+ml+'. Veja as dicas abaixo para ir além.'}</p></section>`;
+  const oks=list.filter(t=>t.lv==='ok').length;
+  let h=`<section class="mhero dhero"><p class="lbl">Dicas de ${ml}</p><p class="mbig" style="font-size:1.7rem">${n.alert?'Precisa de atenção':n.warn?'Quase lá':'Tudo em ordem'}</p>
+    <div class="dstats"><div><b>${n.alert}</b><small>${n.alert===1?'alerta':'alertas'}</small></div><div><b>${n.warn}</b><small>${n.warn===1?'atenção':'atenções'}</small></div><div><b>${oks}</b><small>${oks===1?'ponto bom':'pontos bons'}</small></div></div>
+    <p class="msub">${n.alert||n.warn?'Toque numa dica para ver o que fazer.':'Nada urgente agora. Veja as dicas para ir além.'}</p></section>`;
   list.forEach((t,i)=>{
     const a=actFor(t);
-    h+=`<details class="card tipd"${i===(first<0?0:first)?' open':''}><summary><span class="tag ${t.lv}">${TAG[t.lv]}</span><b>${esc(t.t)}</b></summary>
+    h+=`<details class="card tipd"${i===(first<0?0:first)?' open':''}><summary><span class="ic ${t.lv}" aria-hidden="true">${{alert:'!',warn:'!',ok:'✓',info:'i'}[t.lv]}</span><span class="sr">${TAG[t.lv]}: </span><b>${esc(t.t)}</b></summary>
       <div class="tb"><p>${esc(t.b)}</p>${a?`<button class="ghost sm" data-act="${a[0]==='add'?'add':'gotab'}" data-tab-to="${a[0]}" style="margin-top:12px">${a[1]}</button>`:''}</div></details>`;
   });
-  if(isCurrent()&&S.tx.length)h+=`<details class="card tipd"><summary><span class="tag info">Próximo mês</span><b>O que esperar do mês que vem</b></summary><div class="tb" style="padding:0 0 4px">${vPrev(c,p).replace('<section class="card">','<div style="padding:0 16px 12px">').replace(/<\/section>$/,'</div>')}</div></details>`;
+  if(isCurrent()&&S.tx.length)h+=`<details class="card tipd"><summary><span class="ic info" aria-hidden="true">→</span><b>O que esperar do mês que vem</b></summary><div class="tb">${vPrev(c,p).replace('<section class="card">','<div>').replace(/<\/section>$/,'</div>')}</div></details>`;
   if(S.ai){
     h+=`<section class="card dica"><h3>Dicas sob medida com IA</h3><p>O Claude lê o resumo do seu mês e sugere ações específicas para você.</p>
       <div style="margin-top:12px"><button class="primary" data-act="ai" ${S.aiBusy?'disabled':''}>${S.aiBusy?'Analisando…':(S.aiText?'Gerar de novo':'Pedir dicas para o meu mês')}</button></div>
       <div class="ia-out" id="iaout" aria-live="polite">${esc(S.aiText)}</div></section>`;
   }
-  h+=`<details class="card tipd"><summary><span class="tag ok">Hábitos</span><b>Hábitos que funcionam</b></summary><div class="tb">`+[
+  h+=`<details class="card tipd"><summary><span class="ic ok" aria-hidden="true">✓</span><b>Hábitos que funcionam</b></summary><div class="tb">`+[
     ['Pague-se primeiro','Assim que o salário cair, transfira a parte da economia. O que sobra é para gastar, não o contrário.'],
     ['Regra das 24 horas','Para compras acima de R$ 150 que não são urgentes, espere um dia. Muita vontade passa sozinha.'],
     ['Automatize o que importa','Programe a transferência para a reserva e o pagamento das contas fixas. Menos decisões, menos esquecimentos.'],
