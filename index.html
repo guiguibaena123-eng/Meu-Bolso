@@ -586,6 +586,28 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .tabs button.dot::after{content:"";position:absolute;top:8px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:var(--out);box-shadow:0 0 0 2px var(--surface)}
 .tabs button{letter-spacing:-.01em}
 .tabs button svg{width:23px;height:23px}
+/* acabamento profissional: folha de registro */
+.sheet label{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;margin-top:6px}
+.sheet label.chk{text-transform:none;letter-spacing:0;font-size:.95rem}
+.sheet[data-kind="e"] .seg button[aria-pressed="true"]{color:var(--out)}
+.sheet[data-kind="i"] .seg button[aria-pressed="true"]{color:var(--pos)}
+.sheet[data-kind="v"] .seg button[aria-pressed="true"]{color:var(--need)}
+.sheet .seg.two button[aria-pressed="true"]{color:var(--ink)}
+.amt{justify-content:space-between;align-items:center;background:var(--fill);border:0;border-radius:18px;padding:14px 16px;box-shadow:inset 0 0 0 1.5px transparent;transition:box-shadow .2s ease}
+.amt:focus-within{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.amt input{text-align:right;font-size:2.2rem}
+.ctiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ctile{border:0;background:var(--fill);color:var(--ink);border-radius:16px;padding:10px 6px 9px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;min-height:78px;font-size:.78rem;font-weight:500;line-height:1.15;text-align:center;box-shadow:inset 0 0 0 1.5px transparent;transition:transform .15s ease,box-shadow .2s ease,background .2s ease}
+.ctile span:last-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.ctile:active{transform:scale(.95)}
+.ctile[aria-pressed="true"]{background:var(--accent-soft,rgba(11,122,94,.14));box-shadow:inset 0 0 0 1.5px var(--accent);font-weight:600}
+.ctile .ico{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:var(--c);background:var(--surface)}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.ctile .ico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
+.ctile .ico svg{width:19px;height:19px}
+.descw{position:relative}
+.descw .ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:1rem;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
+.descw .ico:not([hidden])+input{padding-left:50px}
+#dq{margin:2px 0 4px}
 /* ---------- harmonia final: tamanhos, espaços e nada fora do lugar ---------- */
 :root{--r-card:22px;--r-in:14px;--gap:12px}
 .card,.mhero,.hero{margin-top:var(--gap)}
@@ -663,10 +685,11 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
     <label for="amt">Valor</label>
     <div class="amt"><span>R$</span><input id="amt" inputmode="numeric" autocomplete="off" placeholder="0,00"></div>
     <label id="catlbl">Categoria</label>
-    <div class="chips" id="catchips" role="group" aria-labelledby="catlbl"></div>
+    <div class="ctiles" id="catchips" role="group" aria-labelledby="catlbl"></div>
     <label for="desc">Nome do lançamento (opcional)</label>
-    <input id="desc" type="text" maxlength="60" autocomplete="off" placeholder="Ex.: Mercado da semana, Aluguel, Pix do João">
+    <div class="descw"><span class="ico br" id="descico" hidden aria-hidden="true"></span><input id="desc" type="text" maxlength="60" autocomplete="off" placeholder="Ex.: Mercado da semana, Aluguel, Pix do João"></div>
     <label for="dt">Data</label>
+    <div class="chips" id="dq" role="group" aria-label="Atalhos de data"><button type="button" class="chip" data-act="dq" data-d="0">Hoje</button><button type="button" class="chip" data-act="dq" data-d="1">Ontem</button></div>
     <input id="dt" type="date">
     <div id="parcbox">
       <label for="np" id="nplbl">Em quantas parcelas?</label>
@@ -1642,10 +1665,18 @@ function resetDrag(){const sh=$('#form');sh.style.transition='';sh.style.transfo
   sb.addEventListener('touchcancel',e=>{if(mode==='drag')finish(e.timeStamp);else{y0=null;mode=null;sh.style.transition=''}});
   scrim.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 })();
+function paintDescIco(){
+  const el=$('#descico'),b=brandOf($('#desc').value);
+  if(!el)return;
+  if(b){el.hidden=false;el.style.background=b.bg;el.style.color=b.fg;el.textContent=b.ch}else el.hidden=true;
+}
 function paintForm(){
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===S.kind)));
   const cats=allCats(S.kind);if(!cats.some(c=>c.id===S.cat))S.cat=cats[0].id;
-  $('#catchips').innerHTML=cats.map(c=>`<button type="button" class="chip" data-act="cat" data-c="${c.id}" aria-pressed="${c.id===S.cat}">${esc(c.n)}</button>`).join('');
+  $('#catchips').innerHTML=cats.map(c=>`<button type="button" class="ctile" data-act="cat" data-c="${c.id}" aria-pressed="${c.id===S.cat}">${catIco(c.id,c.n)}<span>${esc(c.n)}</span></button>`).join('');
+  $('#form').dataset.kind=S.kind;
+  if(!S.editId)$('#savebtn').textContent={e:'Salvar gasto',i:'Salvar entrada',v:'Salvar investimento'}[S.kind];
+  paintDescIco();
   $('#parcbox').hidden=S.kind!=='e';
   paintParc();
 }
@@ -1773,6 +1804,12 @@ document.addEventListener('click',e=>{
   else if(a==='add')openSheet();
   else if(a==='close')dismissSheet();
   else if(a==='cat'){S.cat=el.dataset.c;paintForm()}
+  else if(a==='dq'){
+    const d=new Date();d.setDate(d.getDate()-(+el.dataset.d));
+    const v=ymOf(d)+'-'+pad(d.getDate()),dt=$('#dt');
+    if(v<dt.min||v>dt.max)toast('Esse dia não está em '+monthLabel().toLowerCase()+'. Troque o mês no topo.');
+    else dt.value=v;
+  }
   else if(a==='flt'){S.filter=el.dataset.f;render()}
   else if(a==='open'){S.open=S.open===el.dataset.id?null:el.dataset.id;render()}
   else if(a==='del'){
@@ -1880,6 +1917,7 @@ document.addEventListener('input',e=>{
     const m=maskMoney(e.target.value);if(e.target.value!==m)e.target.value=m;
   }
   if(e.target.id==='exq'){S.q=e.target.value;paintEx();return}
+  if(e.target.id==='desc')paintDescIco();
   if(e.target.id==='np'){S.rec=false;paintParc()}
   else if(e.target.id==='amt')paintParc();
   if(e.target.id==='sl'){
