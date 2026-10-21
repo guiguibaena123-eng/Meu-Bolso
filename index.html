@@ -225,6 +225,25 @@ input.moeda{text-align:right}
 .limed input.moeda{background:var(--surface)}
 .limed .chip{background:var(--surface)}
 .limed .chip[aria-pressed="true"]{background:var(--accent)}
+
+/* acabamento profissional: extrato */
+.mhero.neg{background:linear-gradient(155deg,#B5402B 0%,#7E2417 100%);box-shadow:0 12px 30px rgba(126,36,23,.3)}
+.dstats.sm{margin:14px 0 8px}
+.dstats.sm div{padding:9px 10px;min-width:0}
+.dstats.sm small{display:block}
+.dstats.sm b{font-size:.98rem;line-height:1.25;overflow-wrap:anywhere}
+.exq{position:relative;margin-top:14px}
+.exq svg{position:absolute;left:14px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.exq input{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--fill);border:0;border-radius:14px;padding:11px 12px 11px 40px;min-height:46px;-webkit-appearance:none;appearance:none}
+.exq input::-webkit-search-cancel-button{-webkit-appearance:none}
+.chip .cn{margin-left:4px;font-size:.78rem;opacity:.7;font-variant-numeric:tabular-nums}
+.dia h3{display:flex;justify-content:space-between;gap:12px;padding:0 6px}
+.dia h3 .dtot{font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0;font-weight:600}
+.item>button{align-items:center}
+.item .t{flex:1}
+.item .t small{display:block;font-size:.85rem;margin-top:1px}
+.item .ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:var(--c);background:var(--fill)}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.item .ico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
 /* dicas */
 .dica{margin-top:12px}
 .dica .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px}
@@ -1113,20 +1132,47 @@ function vResumo(c,p){
   return h;
 }
 
-function vExtrato(){
-  const f=S.filter;
-  const list=S.tx.filter(t=>f==='todos'||t.t===({gastos:'e',entradas:'i',invest:'v'}[f])).slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-  let h=`<div class="chips" role="group" aria-label="Filtro" style="margin-top:12px">`+
-    [['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investimentos']].map(([k,n])=>`<button class="chip" data-act="flt" data-f="${k}" aria-pressed="${f===k}">${n}</button>`).join('')+`</div>`;
-  if(!list.length)return h+`<section class="card vazio"><h2>Nada por aqui</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem neste extrato.</p><button class="primary" data-act="add">Registrar</button></section>`;
+const EXKIND={gastos:'e',entradas:'i',invest:'v'};
+function exFiltered(){
+  const f=S.filter,q=(S.q||'').trim().toLowerCase();
+  return S.tx.filter(t=>(f==='todos'||t.t===EXKIND[f])&&(!q||((t.d||'')+' '+nameOf(t.c)).toLowerCase().includes(q)))
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+}
+function exDay(date){
+  const y=new Date();y.setDate(y.getDate()-1);
+  const ys=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
+  const d=cap(new Date(date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}));
+  return (date===todayStr()?'Hoje · ':date===ys?'Ontem · ':'')+d;
+}
+function exList(list){
+  if(!list.length)return `<section class="card vazio"><h2>Nada encontrado</h2><p>${S.q?'Nenhum lançamento combina com a busca.':'Nada neste filtro em '+esc(monthLabel().toLowerCase())+'.'}</p></section>`;
   const groups={};for(const t of list)(groups[t.date]=groups[t.date]||[]).push(t);
+  let h='';const K=new Map(),kof=id=>{if(!K.has(id))K.set(id,catOf(id));return K.get(id)},nm=id=>(kof(id)||{}).n||'Sem categoria';
   for(const date of Object.keys(groups).sort().reverse()){
-    const d=new Date(date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
-    h+=`<section class="dia"><h3>${esc(d)}</h3><div class="lista">`+groups[date].map(t=>{
-      return `<div class="item"><button data-act="edit" data-id="${esc(t.id)}" aria-label="Editar ${esc(t.d||nameOf(t.c))}, ${brl(t.v)}">
-        <span class="t"><b>${esc(t.d||nameOf(t.c))}</b><small>${esc([t.d?nameOf(t.c):'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · '))}</small></span>
+    const g=groups[date],net=g.reduce((a,t)=>a+(t.t==='i'?t.v:-t.v),0);
+    h+=`<section class="dia"><h3><span>${esc(exDay(date))}</span><span class="dtot">${net>=0?'+ ':'− '}${brl(Math.abs(net))}</span></h3><div class="lista">`+g.map(t=>{
+      const k=kof(t.c),cn=nm(t.c),col=t.t==='i'?'var(--accent)':t.t==='v'?'var(--save)':(k&&k.g==='need'?'var(--need)':'var(--want)');
+      const sub=[t.d?cn:'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · ');
+      return `<div class="item"><button data-act="edit" data-id="${esc(t.id)}" aria-label="Editar ${esc(t.d||cn)}, ${brl(t.v)}">
+        <span class="ico" style="--c:${col}" aria-hidden="true">${esc(cn.charAt(0).toUpperCase())}</span>
+        <span class="t"><b>${esc(t.d||cn)}</b>${sub?`<small>${esc(sub)}</small>`:''}</span>
         <span class="v ${t.t==='i'?'in':t.t==='v'?'inv':''}">${t.t==='i'?'+ ':t.t==='v'?'↗ ':'− '}${brl(t.v)}</span></button></div>`}).join('')+`</div></section>`;
   }
+  return h;
+}
+function paintEx(){const el=$('#exlist');if(el)el.innerHTML=exList(exFiltered())}
+function vExtrato(){
+  const f=S.filter,c=calc(S.tx),n=S.tx.length;
+  const cnt={todos:n,gastos:S.tx.filter(t=>t.t==='e').length,entradas:S.tx.filter(t=>t.t==='i').length,invest:S.tx.filter(t=>t.t==='v').length};
+  if(!n)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem neste extrato.</p><button class="primary" data-act="add">Registrar</button></section>`;
+  let h=`<section class="mhero${c.bal<0?' neg':''}"><p class="lbl">Saldo de ${esc(monthLabel().toLowerCase())}</p><p class="mbig">${brl(c.bal)}</p>
+    <div class="dstats sm"><div><small>Entradas</small><b>${brl(c.inc)}</b></div><div><small>Gastos</small><b>${brl(c.exp)}</b></div><div><small>Investido</small><b>${brl(c.inv)}</b></div></div>
+    <p class="msub">${n} ${n===1?'lançamento':'lançamentos'} no mês</p></section>
+    <div class="exq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="exq" type="search" placeholder="Buscar por nome ou categoria" value="${esc(S.q||'')}" aria-label="Buscar lançamentos" autocomplete="off" enterkeyhint="search"></div>
+    <div class="chips" role="group" aria-label="Filtro" style="margin-top:12px">`+
+    [['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investimentos']].map(([k,t])=>`<button class="chip" data-act="flt" data-f="${k}" aria-pressed="${f===k}">${t} <span class="cn">${cnt[k]}</span></button>`).join('')+`</div>
+    <div id="exlist" aria-live="polite">${exList(exFiltered())}</div>`;
   return h;
 }
 
@@ -1673,6 +1719,7 @@ document.addEventListener('input',e=>{
   if(e.target.id==='amt'||(e.target.classList&&e.target.classList.contains('moeda'))){
     const m=maskMoney(e.target.value);if(e.target.value!==m)e.target.value=m;
   }
+  if(e.target.id==='exq'){S.q=e.target.value;paintEx();return}
   if(e.target.id==='np'){S.rec=false;paintParc()}
   else if(e.target.id==='amt')paintParc();
   if(e.target.id==='sl'){
