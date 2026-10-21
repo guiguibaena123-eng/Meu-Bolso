@@ -732,6 +732,13 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .kwb .item .ico{background:var(--surface)}
 .kwb .item::before{border-top-color:var(--line)}
 .kwb .item>button:active{background:rgba(127,127,127,.14)}
+.kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px}
+.kgrid .ktile{width:auto;height:118px;padding:13px 14px}
+.kgrid .ktile .kv{font-size:1.2rem}
+.ktile.kadd{background:transparent;background-image:none;box-shadow:none;border:1.5px dashed rgba(128,150,144,.6);color:var(--muted);align-items:center;justify-content:center;gap:4px}
+.ktile.kadd .kplus{font-size:1.8rem;font-weight:300;line-height:1}
+.ktile.kadd .kn{opacity:1}
+.kq{margin-top:2px}
 </style>
 
 </head>
@@ -1268,8 +1275,15 @@ function bindWin(w){
 }
 
 /* ---------- janela do cartão: cresce a partir do cartão, troca com um deslize e fecha arrastando ---------- */
-const KW={ids:[],idx:-1,closing:false};
-const kids=()=>[...(S.cfg.cards||[]).map(c=>c.id),...((S.cfg.cards||[]).length&&S.tx.some(t=>!cardOf(t.k))?['none']:[])];
+const KW={ids:[],idx:-1,closing:false,q:'',f:'todos'};
+const kids=()=>[...(S.cfg.cards||[]).map(c=>c.id),...(S.tx.some(t=>!cardOf(t.k))?['none']:[])];
+const kTx=id=>S.tx.filter(t=>id==='none'?!cardOf(t.k):t.k===id);
+function kList(id){
+  const q=KW.q.trim().toLowerCase(),f=KW.f;
+  const l=kTx(id).filter(t=>(f==='todos'||t.t===EXKIND[f])&&(!q||((t.d||'')+' '+nameOf(t.c)).toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const old=S.fcard,oq=S.q;S.fcard=id;S.q=KW.q;const h=exList(l);S.fcard=old;S.q=oq;return h;
+}
+function paintK(){const id=KW.ids[KW.idx],el=$('#klist');if(el)el.innerHTML=kList(id);document.querySelectorAll('#kc [data-act=kflt]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===KW.f)))}
 const kTiles=()=>[...document.querySelectorAll('.ktile[data-k]')];
 const kTile=id=>kTiles().find(t=>t.dataset.k===id);
 function markK(id){kTiles().forEach(t=>{t.style.visibility=t.dataset.k===id?'hidden':''})}
@@ -1285,8 +1299,7 @@ function kcHtml(ids,i){
   const u=kc&&kc.l?Math.min(100,pct(c.exp,kc.l)):0;
   const by={};exps.forEach(t=>{by[t.c]=(by[t.c]||0)+t.v});
   const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const list=tx.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-  const old=S.fcard;S.fcard=id;const lh=exList(list);S.fcard=old;
+  const cnt={todos:tx.length,gastos:exps.length,entradas:tx.filter(t=>t.t==='i').length,invest:tx.filter(t=>t.t==='v').length};
   return `<div class="mh">
     <button type="button" class="nav" data-act="kprev" aria-label="Cartão anterior"${i<=0?' disabled':''}>${mArrow(0)}</button>
     <div class="mt"><b>${esc(name)}</b><small>${esc(monthLabel())}</small></div>
@@ -1298,13 +1311,15 @@ function kcHtml(ids,i){
       ${kc&&kc.l?`<div class="kbar" role="img" aria-label="${Math.round(pct(c.exp,kc.l))}% do limite usado"><i style="width:${u}%"></i></div><span class="kmsg">${Math.round(pct(c.exp,kc.l))}% de ${brl(kc.l)} · livre ${brl(Math.max(0,kc.l-c.exp))}</span>`:`<span class="kmsg">${exps.length} ${exps.length===1?'gasto':'gastos'} em ${esc(monthLabel().toLowerCase())}</span>`}
       <div class="kst"><div><small>Maior gasto</small><b>${brlC(maior)}</b></div><div><small>Lançamentos</small><b>${tx.length}</b></div><div><small>Média</small><b>${brlC(media)}</b></div></div></div>
     ${top.length?`<p class="lbl2">Onde foi</p><div class="ktop">${top.map(([cid,v])=>`<div class="krw">${catIco(cid,nameOf(cid))}<span>${esc(nameOf(cid))}</span><b>${brl(v)}</b></div>`).join('')}</div>`:''}
-    <p class="lbl2">Lançamentos</p>${tx.length?lh:'<p class="hint" style="padding:6px 0 14px">Nenhum lançamento neste cartão em '+esc(monthLabel().toLowerCase())+'.</p>'}
+    <p class="lbl2">Extrato</p>${tx.length?`<div class="exq kq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="kq" type="search" placeholder="Buscar neste cartão" value="${esc(KW.q)}" aria-label="Buscar neste cartão" autocomplete="off" enterkeyhint="search"></div>
+    <div class="chips scroll" role="group" aria-label="Filtro" style="margin-top:10px">${[['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investido']].map(([k,t])=>`<button class="chip" data-act="kflt" data-f="${k}" aria-pressed="${KW.f===k}">${t} <span class="cn">${cnt[k]}</span></button>`).join('')}</div>
+    <div id="klist" aria-live="polite">${kList(id)}</div>`:'<p class="hint" style="padding:6px 0 14px">Nenhum lançamento neste cartão em '+esc(monthLabel().toLowerCase())+'.</p>'}
   </div>
   <div class="mf"><button type="button" class="primary full" data-act="kreg" data-k="${esc(id)}">Registrar${kc?' neste cartão':''}</button></div>`;
 }
 function openCardWin(id,tile){
   const ids=kids(),i=ids.indexOf(id);if(i<0||KW.closing)return;
-  KW.ids=ids;KW.idx=i;
+  KW.ids=ids;KW.idx=i;KW.q='';KW.f='todos';
   const w=kwinEl(),card=w.querySelector('.mcard'),vw=innerWidth,vh=innerHeight;
   $('#kc').innerHTML=kcHtml(ids,i);
   const W=Math.min(vw-32,440),H=Math.min(vh-72,640),L=(vw-W)/2,T=Math.max(24,(vh-H)/2),rc=tile?tile.getBoundingClientRect():{left:L+W/2-60,top:T+H/2-40,width:120,height:80};
@@ -1340,7 +1355,7 @@ function dismissCardDrag(){
 }
 function kNav(d){
   const n=KW.idx+d;if(n<0||n>=KW.ids.length||KW.closing)return;
-  KW.idx=n;$('#kc').innerHTML=kcHtml(KW.ids,n);markK(KW.ids[n]);
+  KW.idx=n;KW.q='';KW.f='todos';$('#kc').innerHTML=kcHtml(KW.ids,n);markK(KW.ids[n]);
   if(!reducedMotion())document.querySelectorAll('#kc .mt,#kc .mb').forEach(e=>{e.classList.remove('sl-r','sl-l');void e.offsetWidth;e.classList.add(d>0?'sl-r':'sl-l')});
 }
 function bindK(w){
@@ -1558,27 +1573,19 @@ function paintEx(){const el=$('#exlist');if(el)el.innerHTML=exList(exFiltered())
 function vExtrato(){
   const cs=S.cfg.cards||[];
   S.fcard=null;
-  const all=S.tx.length,noCard=cs.length?S.tx.filter(t=>!cardOf(t.k)).length:0;
-  const c=calc(S.tx),n=all,f=S.filter;
-  const cnt={todos:n,gastos:S.tx.filter(t=>t.t==='e').length,entradas:S.tx.filter(t=>t.t==='i').length,invest:S.tx.filter(t=>t.t==='v').length};
-  if(!all&&!cs.length)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem neste extrato.</p><button class="primary" data-act="add">Registrar</button></section>`;
+  const all=S.tx.length,noCard=S.tx.filter(t=>!cardOf(t.k)).length;
+  if(!all&&!cs.length)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Crie seus cartões e registre os gastos em cada um. O extrato de cada cartão fica dentro dele.</p><button class="primary" data-act="knew">Criar cartão</button> <button class="ghost" data-act="add" style="margin-left:6px">Registrar sem cartão</button></section>`;
+  const c=calc(S.tx),n=all;
   const cell=(l,v,cls)=>`<div class="${cls||''}"><small>${l}</small><b title="${brl(v)}" aria-label="${l}: ${brl(v)}">${brlC(v)}</b></div>`;
   let h=`<section class="mhero exhero${c.bal<0?' neg':''}"><p class="msub" style="margin:0 0 12px">${n} ${n===1?'lançamento':'lançamentos'} em ${esc(monthLabel().toLowerCase())}</p>
       <div class="exrow">${cell('Saldo',c.bal,'main')+cell('Entradas',c.inc)+cell('Gastos',c.exp)+cell('Investido',c.inv)}</div></section>`;
-  if(cs.length){
-    const per=k=>{const l=S.tx.filter(t=>k==='none'?!cardOf(t.k):t.k===k);return {v:l.filter(t=>t.t==='e').reduce((a,t)=>a+t.v,0),n:l.length}};
-    const tile=(id,name,col,fg,lim)=>{const e=per(id),u=lim?Math.min(100,pct(e.v,lim)):0;
-      return `<button type="button" class="ktile" data-act="kopen" data-k="${esc(id)}" style="--kc:${esc(col)};--kf:${esc(fg)}" aria-label="Abrir extrato do cartão ${esc(name)}: ${brl(e.v)}">
-        <span class="kn">${esc(name)}</span><span class="kv">${brl(e.v)}</span><span class="ks">${lim?`${Math.round(pct(e.v,lim))}% de ${brl(lim)}`:`${e.n} ${e.n===1?'lançamento':'lançamentos'}`}</span>${lim?`<span class="kt"><i style="width:${u}%"></i></span>`:''}</button>`};
-    h+=`<div class="chd kh2"><span class="gh2">Extrato por cartão</span><span class="hint">Toque para abrir</span></div><div class="kscroll kstrip">`+
-      cs.map(k=>tile(k.id,k.n,k.c,k.f,k.l)).join('')+(noCard?tile('none','Sem cartão','#6B7F78','#fff',0):'')+`</div>`;
-  }
-  if(!n)return h+`<section class="card vazio"><h2>Nenhum lançamento</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem aqui.</p><button class="primary" data-act="add">Registrar</button></section>`;
-  h+=`<div class="exq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="exq" type="search" placeholder="Buscar por nome ou categoria" value="${esc(S.q||'')}" aria-label="Buscar lançamentos" autocomplete="off" enterkeyhint="search"></div>
-    <div class="chips scroll" role="group" aria-label="Filtro" style="margin-top:12px">`+
-    [['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investido']].map(([k,t])=>`<button class="chip" data-act="flt" data-f="${k}" aria-pressed="${f===k}">${t} <span class="cn">${cnt[k]}</span></button>`).join('')+`</div>
-    <div id="exlist" aria-live="polite">${exList(exFiltered())}</div>`;
+  const per=k=>{const l=S.tx.filter(t=>k==='none'?!cardOf(t.k):t.k===k);return {v:l.filter(t=>t.t==='e').reduce((a,t)=>a+t.v,0),n:l.length}};
+  const tile=(id,name,col,fg,lim)=>{const e=per(id),u=lim?Math.min(100,pct(e.v,lim)):0;
+    return `<button type="button" class="ktile" data-act="kopen" data-k="${esc(id)}" style="--kc:${esc(col)};--kf:${esc(fg)}" aria-label="Abrir extrato do cartão ${esc(name)}: ${brl(e.v)}">
+      <span class="kn">${esc(name)}</span><span class="kv">${brl(e.v)}</span><span class="ks">${lim?`${Math.round(pct(e.v,lim))}% de ${brl(lim)}`:`${e.n} ${e.n===1?'lançamento':'lançamentos'}`}</span>${lim?`<span class="kt"><i style="width:${u}%"></i></span>`:''}</button>`};
+  h+=`<div class="chd kh2"><span class="gh2">Meus cartões</span><span class="hint">Toque para ver o extrato</span></div><div class="kgrid">`+
+    cs.map(k=>tile(k.id,k.n,k.c,k.f,k.l)).join('')+(noCard?tile('none','Sem cartão','#6B7F78','#fff',0):'')+
+    `<button type="button" class="ktile kadd" data-act="knew" aria-label="Criar novo cartão"><span class="kplus" aria-hidden="true">+</span><span class="kn">Novo cartão</span></button></div>`;
   return h;
 }
 
@@ -1799,9 +1806,9 @@ function slideMain(cls){const m=$('#main');m.classList.remove('go-l','go-r');voi
 /* deslizar para o lado troca de aba, como nos apps do iOS */
 (function(){
   let x0=0,y0=0,t0=0,ok=false;
-  const bad=t=>t.closest&&t.closest('input,select,textarea,summary,.sheet,#sheet,.tabs');
+  const bad=t=>t.closest&&t.closest('input,select,textarea,summary,.sheet,#sheet,.tabs,.mwin,.kscroll,.chips.scroll');
   document.addEventListener('touchstart',e=>{
-    const t=e.touches[0];ok=e.touches.length===1&&!bad(e.target)&&$('#sheet').hidden&&$('#year').hidden&&!document.body.classList.contains('welcome')&&t.clientX>24&&t.clientX<window.innerWidth-24;
+    const t=e.touches[0];ok=e.touches.length===1&&!bad(e.target)&&$('#sheet').hidden&&$('#year').hidden&&(!$('#kwin')||$('#kwin').hidden)&&(!$('#mwin')||$('#mwin').hidden)&&!document.body.classList.contains('welcome')&&t.clientX>24&&t.clientX<window.innerWidth-24;
     x0=t.clientX;y0=t.clientY;t0=e.timeStamp;
   },{passive:true});
   document.addEventListener('touchend',e=>{
@@ -2127,6 +2134,8 @@ document.addEventListener('click',e=>{
     const b=document.querySelector('.ktab[aria-selected="true"]');if(b&&b.scrollIntoView)b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   }
   else if(a==='kopen')openCardWin(el.dataset.k,el);
+  else if(a==='kflt'){KW.f=el.dataset.f;paintK()}
+  else if(a==='knew'){S.cardsOpen=true;goTab('ajustes')}
   else if(a==='kclose')closeCardWin();
   else if(a==='kprev')kNav(-1);
   else if(a==='knext')kNav(1);
@@ -2249,7 +2258,7 @@ document.addEventListener('input',e=>{
   if(e.target.id==='amt'||(e.target.classList&&e.target.classList.contains('moeda'))){
     const m=maskMoney(e.target.value);if(e.target.value!==m)e.target.value=m;
   }
-  if(e.target.id==='exq'){S.q=e.target.value;paintEx();return}
+  if(e.target.id==='kq'){KW.q=e.target.value;paintK();return}
   if(e.target.id==='desc'){paintDescIco();paintSugs();autoCat()}
   if(e.target.id==='np'){S.rec=false;paintParc()}
   else if(e.target.id==='amt')paintParc();
