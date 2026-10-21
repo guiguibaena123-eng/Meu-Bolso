@@ -1100,7 +1100,6 @@ function vAjustes(c){
       <select id="ncg" aria-label="Tipo da nova categoria"><option value="need">Gasto · necessidade</option><option value="want">Gasto · desejo</option><option value="in">Entrada</option><option value="inv">Investimento</option></select>
       <button class="primary" data-act="addcat">Adicionar categoria</button></div></details></section>`;
   h+=installCard();
-  h+=tipsCard();
   h+=backupCard();
   const n=S.tx.length;
   h+=`<section class="card"><h2>Recomeçar do zero</h2><p class="hint" style="margin-bottom:12px">Errou no começo ou quer registrar tudo de novo? Apague e comece limpo.</p>`;
@@ -1517,7 +1516,7 @@ document.addEventListener('click',e=>{
   }
   else if(a==='wipeall'){
     if(S.db&&(S.offline||!navigator.onLine)){S.confirm=null;render();toast('Para apagar tudo da sua conta, conecte-se à internet.');return}
-    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent,rems:S.cfg.rems,tipH:S.cfg.tipH,tipM:S.cfg.tipM};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
+    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent,rems:S.cfg.rems};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
     if(S.db){
       const base='data/users/'+S.uid,pre='mbc:'+S.uid+':';
       try{Object.keys(localStorage).filter(k=>k.startsWith(pre)).forEach(k=>localStorage.removeItem(k))}catch(err){}
@@ -1624,9 +1623,7 @@ function loadCfg(raw){
   S.cfg={savePct:Number.isFinite(d.savePct)?d.savePct:20,limits:d.limits&&typeof d.limits==='object'?d.limits:{},
     names:d.names&&typeof d.names==='object'?d.names:{},custom:Array.isArray(d.custom)?d.custom:[],name:typeof d.name==='string'?d.name.slice(0,30):'',recs:Array.isArray(d.recs)?d.recs:[],
     theme:['auto','light','dark'].includes(d.theme)?d.theme:'auto',accent:['green','blue','purple','orange'].includes(d.accent)?d.accent:'green',
-    rems:Array.isArray(d.rems)?d.rems.filter(r=>r&&typeof r.id==='string'&&['d','u','ult','fim'].includes(r.k)&&Number.isInteger(r.n)&&[8,9,12,18,20].includes(r.h)).slice(0,8):null,
-    tipH:Number.isInteger(d.tipH)&&d.tipH>=6&&d.tipH<=22?d.tipH:19,
-    tipM:Number.isInteger(d.tipM)&&d.tipM>=0&&d.tipM<=55&&d.tipM%5===0?d.tipM:0};
+    rems:Array.isArray(d.rems)?d.rems.filter(r=>r&&typeof r.id==='string'&&['d','u','ult','fim'].includes(r.k)&&Number.isInteger(r.n)&&[8,9,12,18,20].includes(r.h)).slice(0,8):null};
 }
 async function start(){
   render();
@@ -1908,26 +1905,6 @@ document.addEventListener('change',e=>{
   else if(t.id==='obh')o.h=+t.value;
 });
 (()=>{const s=document.createElement('style');s.textContent='.obopts{display:grid;gap:10px;margin:8px 0}.obopt{all:unset;box-sizing:border-box;display:block;background:var(--surface);box-shadow:var(--shadow);border-radius:20px;padding:16px 18px;cursor:pointer;transition:transform .15s ease}.obopt:active{transform:scale(.97)}.obopt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.obopt b{display:block;font-size:1.08rem;margin-bottom:2px}.obopt small{color:var(--muted);font-size:.9rem}.obpart{display:grid;gap:8px;margin-top:10px}.boas .rdrow{display:grid;gap:8px;padding:12px 0;border-top:.5px solid var(--line)}.boas .rdrow>span{font-weight:700}';document.head.append(s)})();
-
-/* dicas diárias de investimento: 10 dicas no Calendário, uma por dia, no horário escolhido */
-const TIP_H=Array.from({length:17},(_,i)=>i+6);
-const TIP_M=Array.from({length:12},(_,i)=>i*5);
-const TIP_HM=TIP_H.flatMap(h=>TIP_M.map(m=>[h*100+m,m?h+':'+pad(m)+'h':h+'h']));
-const tipH=()=>TIP_H.includes(S.cfg.tipH)?S.cfg.tipH:19;
-const tipM=()=>TIP_M.includes(S.cfg.tipM)?S.cfg.tipM:0;
-const tipUrl=()=>new URL('l/dica-'+pad(tipH())+pad(tipM())+'.ics',APP_URL).href;
-function tipsCard(){
-  return `<section class="card"><h2>Dicas diárias de investimento</h2>
-    <p class="hint">Uma dica curta por dia, em um ciclo de 50 dicas que recomeça sozinho. Chega como aviso do Calendário. É conteúdo educativo, não uma recomendação personalizada.</p>
-    <label class="hint" for="tiph" style="margin-top:12px">Horário do aviso</label>
-    <select id="tiph">${remOpts(TIP_HM,tipH()*100+tipM())}</select>
-    <div class="acts2" style="margin-top:12px"><a class="primary" style="display:inline-flex;align-items:center;text-decoration:none" href="${tipUrl()}" target="_blank" rel="noopener">Adicionar ao Calendário</a></div>
-    <p class="hint" style="margin-top:12px">Toque em <b>Adicionar ao Calendário</b>. Quando o iPhone mostrar os eventos, toque em <b>Adicionar Tudo</b> e escolha o calendário. Crie um chamado "Dicas" para poder apagar tudo de uma vez. Se mudar o horário depois, apague esse calendário e adicione de novo.</p></section>`;
-}
-document.addEventListener('change',e=>{
-  if(e.target.id!=='tiph')return;
-  const v=+e.target.value;S.cfg={...S.cfg,tipH:Math.floor(v/100),tipM:v%100};saveCfg();render();
-});
 /* passo a passo para instalar o app, mostrado a quem abre o link pelo navegador */
 const inst={step:0,deferred:null};
 const instSkipped=()=>{try{return sessionStorage.getItem('mbSkipInst')==='1'}catch(e){return false}};
