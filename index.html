@@ -1914,7 +1914,7 @@ const tipH=()=>TIP_H.includes(S.cfg.tipH)?S.cfg.tipH:19;
 const tipUrl=()=>new URL('l/dica-'+pad(tipH())+'.ics',APP_URL).href.replace(/^https?:/,'webcal:');
 function tipsCard(){
   return `<section class="card"><h2>Dicas diárias de investimento</h2>
-    <p class="hint">Uma dica curta por dia, em um ciclo de 10 dicas que recomeça sozinho. Chega como aviso do Calendário. É conteúdo educativo, não uma recomendação personalizada.</p>
+    <p class="hint">Uma dica curta por dia, em um ciclo de 50 dicas que recomeça sozinho. Chega como aviso do Calendário. É conteúdo educativo, não uma recomendação personalizada.</p>
     <label class="hint" for="tiph" style="margin-top:12px">Horário do aviso</label>
     <select id="tiph">${remOpts(TIP_H.map(x=>[x,x+'h']),tipH())}</select>
     <div class="acts2" style="margin-top:12px"><a class="primary" style="display:inline-flex;align-items:center;text-decoration:none" href="${tipUrl()}">Ativar no Calendário</a></div>
