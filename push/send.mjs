@@ -24,8 +24,8 @@ if (dry) {
 const privateKey = (process.env.VAPID_PRIVATE_KEY || '').trim();
 const raw = (process.env.PUSH_SUBSCRIPTION || '').trim();
 if (!privateKey || !raw) {
-  console.log('Falta configurar o segredo ' + (!privateKey ? 'VAPID_PRIVATE_KEY' : 'PUSH_SUBSCRIPTION') + ' no GitHub. Nada foi enviado.');
-  process.exit(0);
+  console.error('::error::Falta configurar o segredo ' + (!privateKey ? 'VAPID_PRIVATE_KEY' : 'PUSH_SUBSCRIPTION') + ' no GitHub. Nada foi enviado.');
+  process.exit(1);
 }
 
 let subscription;
