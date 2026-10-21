@@ -685,23 +685,8 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .kscroll{padding-bottom:18px;margin-bottom:-8px;scroll-padding:0 18px}
 .kstrip{scroll-padding:0 16px}
 /* extrato por cartão */
-.ktabs{display:flex;gap:6px;overflow-x:auto;margin:4px -16px 0;padding:2px 16px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
-.ktabs::-webkit-scrollbar{display:none}
-.ktab{flex:none;scroll-snap-align:center;display:inline-flex;align-items:center;gap:0;border:0;border-radius:999px;padding:9px 14px;font-size:.92rem;font-weight:600;white-space:nowrap;background:var(--fill);color:var(--ink);min-height:40px;transition:background .25s ease,color .25s ease,transform .15s ease,box-shadow .25s ease}
-.ktab:active{transform:scale(.95)}
-.ktab .kdot{margin-right:7px}
-.ktab .cn{margin-left:7px;font-size:.78rem;opacity:.7;font-variant-numeric:tabular-nums}
-.ktab[aria-selected="true"]{background:var(--ink);color:var(--bg);box-shadow:0 4px 12px rgba(0,0,0,.18)}
-.ktab[aria-selected="true"][style]{background-color:var(--kc);color:var(--kf);background-image:linear-gradient(145deg,rgba(255,255,255,.18),rgba(0,0,0,.2))}
-.ktab[aria-selected="true"] .kdot{background:var(--kf)!important;box-shadow:none}
-.mhero.kc{background-color:var(--kc);background-image:linear-gradient(145deg,rgba(255,255,255,.2),rgba(0,0,0,.26));color:var(--kf);box-shadow:0 12px 30px rgba(0,0,0,.22)}
-.mhero.kc .msub{color:var(--kf);opacity:.85}
-.mhero.kc .exrow small{color:var(--kf);opacity:.8}
-.mhero.kc .exrow .main{background:rgba(255,255,255,.18)}
-.mhero.kc .exrow b{color:var(--kf)}
 .kbar{height:7px;border-radius:4px;background:rgba(127,127,127,.35);margin-top:14px;overflow:hidden}
 .kbar i{display:block;height:100%;border-radius:4px;background:var(--kf)}
-.mhero.kc .kmsg{margin-top:6px;font-size:.82rem}
 .ktile .kt{background:rgba(127,127,127,.35)}
 .ktile .kt i{background:var(--kf,#fff)}
 /* janela do cartão */
@@ -735,10 +720,18 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px}
 .kgrid .ktile{width:auto;height:118px;padding:13px 14px}
 .kgrid .ktile .kv{font-size:1.2rem}
+.kgrid .ktile.kadd{grid-column:1/-1;height:60px;flex-direction:row;gap:10px;padding:0 14px}
 .ktile.kadd{background:transparent;background-image:none;box-shadow:none;border:1.5px dashed rgba(128,150,144,.6);color:var(--muted);align-items:center;justify-content:center;gap:4px}
 .ktile.kadd .kplus{font-size:1.8rem;font-weight:300;line-height:1}
 .ktile.kadd .kn{opacity:1}
 .kq{margin-top:2px}
+.ktile .kv{margin-top:auto}
+.ktile .ks{min-height:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ktile .kt{flex:none;margin-top:7px;height:5px}
+.ktile .kt.off{visibility:hidden}
+.ktile.static{cursor:default;transition:none}
+.ktile.static:active{transform:none}
+.kscroll .ktile{height:112px}
 </style>
 
 </head>
@@ -1276,12 +1269,13 @@ function bindWin(w){
 
 /* ---------- janela do cartão: cresce a partir do cartão, troca com um deslize e fecha arrastando ---------- */
 const KW={ids:[],idx:-1,closing:false,q:'',f:'todos'};
+function cardStats(){const m={};for(const t of S.tx){const k=cardOf(t.k)?t.k:'none',e=m[k]||(m[k]={v:0,n:0});e.n++;if(t.t==='e')e.v+=t.v}return m}
 const kids=()=>[...(S.cfg.cards||[]).map(c=>c.id),...(S.tx.some(t=>!cardOf(t.k))?['none']:[])];
 const kTx=id=>S.tx.filter(t=>id==='none'?!cardOf(t.k):t.k===id);
 function kList(id){
   const q=KW.q.trim().toLowerCase(),f=KW.f;
   const l=kTx(id).filter(t=>(f==='todos'||t.t===EXKIND[f])&&(!q||((t.d||'')+' '+nameOf(t.c)).toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-  const old=S.fcard,oq=S.q;S.fcard=id;S.q=KW.q;const h=exList(l);S.fcard=old;S.q=oq;return h;
+  return exList(l,id!=='none',KW.q);
 }
 function paintK(){const id=KW.ids[KW.idx],el=$('#klist');if(el)el.innerHTML=kList(id);document.querySelectorAll('#kc [data-act=kflt]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===KW.f)))}
 const kTiles=()=>[...document.querySelectorAll('.ktile[data-k]')];
@@ -1439,12 +1433,11 @@ function vResumo(c,p){
       <p class="hint" style="margin-top:8px">Meta de ${brl(goal)} (${S.cfg.savePct}% da renda)</p></section>`;
   }
   if((S.cfg.cards||[]).length){
-    const per={};for(const t of S.tx)if(t.k&&t.t==='e')(per[t.k]=per[t.k]||{v:0,n:0}).v+=t.v,per[t.k].n++;
-    h+=`<section class="card kcard"><div class="chd"><h2>Meus cartões</h2><button class="lnk" data-tab="ajustes">Gerenciar</button></div><div class="kscroll">`+
+    const per=cardStats();
+    h+=`<section class="card kcard"><div class="chd"><h2>Meus cartões</h2><button class="lnk" data-tab="extrato">Ver extratos</button></div><div class="kscroll">`+
       S.cfg.cards.map(k=>{const e=per[k.id]||{v:0,n:0},u=k.l?Math.min(100,pct(e.v,k.l)):0;
-        return `<button type="button" class="ktile" data-act="kopen" data-k="${esc(k.id)}" style="--kc:${esc(k.c)};--kf:${esc(k.f)}" aria-label="${esc(k.n)}: ${brl(e.v)} em ${esc(monthLabel().toLowerCase())}">
-        <span class="kn">${esc(k.n)}</span><span class="kv">${brl(e.v)}</span>
-        <span class="ks">${k.l?`${Math.round(pct(e.v,k.l))}% de ${brl(k.l)}`:`${e.n} ${e.n===1?'lançamento':'lançamentos'}`}</span>${k.l?`<span class="kt"><i style="width:${u}%"></i></span>`:''}</button>`}).join('')+`</div></section>`;
+        return `<div class="ktile static" role="group" style="--kc:${esc(k.c)};--kf:${esc(k.f)}" aria-label="${esc(k.n)}: ${brl(e.v)} em ${esc(monthLabel().toLowerCase())}">
+        <span class="kn">${esc(k.n)}</span><span class="kv">${brl(e.v)}</span><span class="ks">${k.l?`${Math.round(pct(e.v,k.l))}% de ${brl(k.l)}`:`${e.n} ${e.n===1?'lançamento':'lançamentos'}`}</span><span class="kt${k.l?'':' off'}"><i style="width:${u}%"></i></span></div>`}).join('')+`</div></section>`;
   }
   const D=Math.max(c.inc,c.exp+c.inv)||1,pn=pct(c.need,D),pw=pct(c.want,D),ps=pct(c.saved,D);
   h+=`<section class="card"><h2>Como seu dinheiro se divide</h2>
@@ -1472,11 +1465,6 @@ function vResumo(c,p){
 
 const EXKIND={gastos:'e',entradas:'i',invest:'v'};
 const brlC=v=>{const a=Math.abs(v),sg=v<0?'-':'';return a>=1e6?sg+'R$ '+(a/1e6).toFixed(1).replace('.',',')+' mi':a>=1e4?sg+'R$ '+(a/1e3).toFixed(1).replace('.',',')+' mil':brl(v)};
-function exFiltered(){
-  const f=S.filter,q=(S.q||'').trim().toLowerCase();
-  return S.tx.filter(t=>(f==='todos'||t.t===EXKIND[f])&&inCard(t)&&(!q||((t.d||'')+' '+nameOf(t.c)).toLowerCase().includes(q)))
-    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-}
 function exDay(date){
   const y=new Date();y.setDate(y.getDate()-1);
   const ys=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
@@ -1553,15 +1541,15 @@ function txIco(t,name){
   if(b)return `<span class="ico br" style="background:${b.bg};color:${b.fg}" aria-hidden="true">${esc(b.ch)}</span>`;
   return catIco(t.c,name);
 }
-function exList(list){
-  if(!list.length)return `<section class="card vazio"><h2>Nada encontrado</h2><p>${S.q?'Nenhum lançamento combina com a busca.':'Nada neste filtro em '+esc(monthLabel().toLowerCase())+'.'}</p></section>`;
+function exList(list,hideCard,q){
+  if(!list.length)return `<section class="card vazio"><h2>Nada encontrado</h2><p>${q?'Nenhum lançamento combina com a busca.':'Nada neste filtro em '+esc(monthLabel().toLowerCase())+'.'}</p></section>`;
   const groups={};for(const t of list)(groups[t.date]=groups[t.date]||[]).push(t);
   let h='';const K=new Map(),kof=id=>{if(!K.has(id))K.set(id,catOf(id));return K.get(id)},nm=id=>(kof(id)||{}).n||'Sem categoria';
   for(const date of Object.keys(groups).sort().reverse()){
     const g=groups[date],net=g.reduce((a,t)=>a+(t.t==='i'?t.v:-t.v),0);
     h+=`<section class="dia"><h3><span>${esc(exDay(date))}</span><span class="dtot">${net>=0?'+ ':'− '}${brl(Math.abs(net))}</span></h3><div class="lista">`+g.map(t=>{
       const cn=nm(t.c);
-      const kk=(S.fcard&&S.fcard!=='none')?null:cardOf(t.k),sub=[t.d?esc(cn):'',kk?`<i class="kdot" style="background:${esc(kk.c)}"></i>${esc(kk.n)}`:'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · ');
+      const kk=hideCard?null:cardOf(t.k),sub=[t.d?esc(cn):'',kk?`<i class="kdot" style="background:${esc(kk.c)}"></i>${esc(kk.n)}`:'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · ');
       return `<div class="item"><button data-act="edit" data-id="${esc(t.id)}" aria-label="Editar ${esc(t.d||cn)}, ${brl(t.v)}">
         ${txIco(t,cn)}
         <span class="t"><b>${esc(t.d||cn)}</b>${sub?`<small>${sub}</small>`:''}</span>
@@ -1569,20 +1557,18 @@ function exList(list){
   }
   return h;
 }
-function paintEx(){const el=$('#exlist');if(el)el.innerHTML=exList(exFiltered())}
 function vExtrato(){
   const cs=S.cfg.cards||[];
-  S.fcard=null;
   const all=S.tx.length,noCard=S.tx.filter(t=>!cardOf(t.k)).length;
   if(!all&&!cs.length)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Crie seus cartões e registre os gastos em cada um. O extrato de cada cartão fica dentro dele.</p><button class="primary" data-act="knew">Criar cartão</button> <button class="ghost" data-act="add" style="margin-left:6px">Registrar sem cartão</button></section>`;
   const c=calc(S.tx),n=all;
   const cell=(l,v,cls)=>`<div class="${cls||''}"><small>${l}</small><b title="${brl(v)}" aria-label="${l}: ${brl(v)}">${brlC(v)}</b></div>`;
   let h=`<section class="mhero exhero${c.bal<0?' neg':''}"><p class="msub" style="margin:0 0 12px">${n} ${n===1?'lançamento':'lançamentos'} em ${esc(monthLabel().toLowerCase())}</p>
       <div class="exrow">${cell('Saldo',c.bal,'main')+cell('Entradas',c.inc)+cell('Gastos',c.exp)+cell('Investido',c.inv)}</div></section>`;
-  const per=k=>{const l=S.tx.filter(t=>k==='none'?!cardOf(t.k):t.k===k);return {v:l.filter(t=>t.t==='e').reduce((a,t)=>a+t.v,0),n:l.length}};
-  const tile=(id,name,col,fg,lim)=>{const e=per(id),u=lim?Math.min(100,pct(e.v,lim)):0;
+  const st=cardStats();
+  const tile=(id,name,col,fg,lim)=>{const e=st[id]||{v:0,n:0},u=lim?Math.min(100,pct(e.v,lim)):0;
     return `<button type="button" class="ktile" data-act="kopen" data-k="${esc(id)}" style="--kc:${esc(col)};--kf:${esc(fg)}" aria-label="Abrir extrato do cartão ${esc(name)}: ${brl(e.v)}">
-      <span class="kn">${esc(name)}</span><span class="kv">${brl(e.v)}</span><span class="ks">${lim?`${Math.round(pct(e.v,lim))}% de ${brl(lim)}`:`${e.n} ${e.n===1?'lançamento':'lançamentos'}`}</span>${lim?`<span class="kt"><i style="width:${u}%"></i></span>`:''}</button>`};
+      <span class="kn">${esc(name)}</span><span class="kv">${brl(e.v)}</span><span class="ks">${lim?`${Math.round(pct(e.v,lim))}% de ${brl(lim)}`:`${e.n} ${e.n===1?'lançamento':'lançamentos'}`}</span><span class="kt${lim?'':' off'}"><i style="width:${u}%"></i></span></button>`};
   h+=`<div class="chd kh2"><span class="gh2">Meus cartões</span><span class="hint">Toque para ver o extrato</span></div><div class="kgrid">`+
     cs.map(k=>tile(k.id,k.n,k.c,k.f,k.l)).join('')+(noCard?tile('none','Sem cartão','#6B7F78','#fff',0):'')+
     `<button type="button" class="ktile kadd" data-act="knew" aria-label="Criar novo cartão"><span class="kplus" aria-hidden="true">+</span><span class="kn">Novo cartão</span></button></div>`;
@@ -1932,7 +1918,6 @@ function resetDrag(){const sh=$('#form');sh.style.transition='';sh.style.transfo
 })();
 const CARD_PRESETS=[['Nubank','#820AD1','#fff'],['Inter','#FF7A00','#fff'],['Itaú','#EC7000','#003399'],['Bradesco','#CC092F','#fff'],['Santander','#EC0000','#fff'],['C6 Bank','#242424','#fff'],['Banco do Brasil','#FFEF38','#003882'],['Caixa','#005CA9','#F39200'],['PicPay','#11C76F','#fff'],['Mercado Pago','#00B1EA','#fff'],['Neon','#00E5FF','#000'],['BTG','#001E62','#fff']];
 const cardOf=id=>id?(S.cfg.cards||[]).find(c=>c.id===id):null;
-const inCard=t=>!S.fcard||(S.fcard==='none'?!cardOf(t.k):t.k===S.fcard);
 function makeCard(name){
   const b=brandOf(name),n=(S.cfg.cards||[]).length;
   const P=CARD_PRESETS[n%CARD_PRESETS.length];
@@ -2123,15 +2108,9 @@ document.addEventListener('click',e=>{
   else if(a==='kcolor'){const id=el.dataset.k;const P=CARD_PRESETS[+el.dataset.i];S.cfg={...S.cfg,cards:S.cfg.cards.map(c=>c.id===id?{...c,c:P[1],f:P[2]}:c)};saveCfg();S.cardsOpen=true;render()}
   else if(a==='kdel'){
     const id=el.dataset.id,old=S.cfg.cards;
-    S.cfg={...S.cfg,cards:old.filter(c=>c.id!==id)};if(S.fcard===id)S.fcard=null;saveCfg();S.cardsOpen=true;render();
+    S.cfg={...S.cfg,cards:old.filter(c=>c.id!==id)};saveCfg();S.cardsOpen=true;render();
     S.undoFn=()=>{S.cfg={...S.cfg,cards:old};saveCfg();render()};
     toast('Cartão removido. Os lançamentos ficam sem cartão.',true);
-  }
-  else if(a==='fcard'){
-    const ids=[null,...(S.cfg.cards||[]).map(c=>c.id),'none'],nx=el.dataset.k||null;
-    const dir=ids.indexOf(nx)>ids.indexOf(S.fcard||null)?'go-r':'go-l';
-    S.fcard=nx;S.filter='todos';S.q='';render();slideMain(dir);
-    const b=document.querySelector('.ktab[aria-selected="true"]');if(b&&b.scrollIntoView)b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   }
   else if(a==='kopen')openCardWin(el.dataset.k,el);
   else if(a==='kflt'){KW.f=el.dataset.f;paintK()}
@@ -2152,7 +2131,6 @@ document.addEventListener('click',e=>{
     if(v<dt.min||v>dt.max)toast('Esse dia não está em '+monthLabel().toLowerCase()+'. Troque o mês no topo.');
     else dt.value=v;
   }
-  else if(a==='flt'){S.filter=el.dataset.f;render()}
   else if(a==='open'){S.open=S.open===el.dataset.id?null:el.dataset.id;render()}
   else if(a==='del'){
     const t=S.tx.find(x=>x.id===el.dataset.id);if(!t)return;
