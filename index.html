@@ -631,6 +631,18 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .limhead .n small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mhero .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dia h3{margin-bottom:8px}
+/* ---------- polimento geral ---------- */
+::selection{background:var(--accent-soft,rgba(11,122,94,.18))}
+html{scroll-padding-top:72px}
+button,.chip,.ctile,.tabs{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,select,textarea{-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
+#toast{max-width:calc(100vw - 32px)}
+.card,.mhero,.hero,.aviso2{transition:opacity .2s ease}
+.primary:focus-visible,.ghost:focus-visible,.chip:focus-visible,.ctile:focus-visible,.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lim,.item,.cat{-webkit-tap-highlight-color:transparent}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+@media (min-width:600px){.app{max-width:560px}}
 </style>
 
 </head>
@@ -1023,10 +1035,11 @@ function yearHtml(y,rows){
   const cur=ymOf(new Date()),have=rows.filter(r=>!r.empty),T=k=>have.reduce((s,r)=>s+r[k],0);
   const fut=rows.filter(r=>!r.real&&!r.empty);
   let h=`<section class="hero"><p class="lbl">Saldo de ${y}${fut.length?' (com previsão)':''}</p><p class="big ${T('bal')<0?'neg':''}">${brl(T('bal'))}</p>
-    <dl class="io"><div><dt>Entradas</dt><dd>${brl(T('inc'))}</dd></div><div><dt>Saídas</dt><dd>${brl(T('exp'))}</dd></div>${T('inv')>0?`<div style="grid-column:1/-1"><dt>Investido</dt><dd>${brl(T('inv'))}</dd></div>`:''}</dl></section>`;
+    <dl class="io t3"><div><dt>Entradas</dt><dd title="${brl(T('inc'))}">${brlC(T('inc'))}</dd></div><div><dt>Saídas</dt><dd title="${brl(T('exp'))}">${brlC(T('exp'))}</dd></div><div><dt>Investido</dt><dd title="${brl(T('inv'))}">${brlC(T('inv'))}</dd></div></dl></section>`;
   if(fut.length){
     const worst=fut.reduce((a,b)=>b.bal<a.bal?b:a),best=fut.reduce((a,b)=>b.bal>a.bal?b:a),sched=fut.reduce((s,r)=>s+r.sched,0),L=[];
     if(worst.bal<0)L.push([`${mName(worst.ym)} deve fechar no vermelho`,`Faltariam ${brl(-worst.bal)}. Vale ajustar gastos ou a meta antes desse mês chegar.`]);
+    else if(fut.length>1&&best.bal-worst.bal<1)L.push(['Os próximos meses devem ser parecidos',`A previsão é de ${brl(worst.bal)} de sobra por mês.`]);
     else if(fut.length>1)L.push([`${mName(worst.ym)} será o mês mais apertado`,`Sobram ${brl(worst.bal)} nele, contra ${brl(best.bal)} em ${mName(best.ym)}.`]);
     if(sched>0)L.push([`${brl(sched)} já estão comprometidos`,'É a soma das parcelas e assinaturas já agendadas para os meses que faltam neste ano.']);
     h+=`<section class="card"><h2>Olhando para frente</h2>${L.map(([t,b])=>`<div class="ytip"><b>${esc(t)}</b><p class="hint">${esc(b)}</p></div>`).join('')}<p class="hint" style="font-size:.82rem">Os meses "previstos" usam a média de renda e gastos dos seus últimos meses, mais as parcelas e assinaturas já agendadas.</p></section>`;
@@ -1469,9 +1482,10 @@ function vDicas(c,p){
   const list=tips(c,p),n={alert:0,warn:0};list.forEach(t=>{if(n[t.lv]!==undefined)n[t.lv]++});
   const first=list.findIndex(t=>t.lv==='alert'||t.lv==='warn'),ml=esc(monthLabel().toLowerCase());
   const oks=list.filter(t=>t.lv==='ok').length;
-  let h=`<section class="mhero dhero"><p class="lbl">Dicas de ${ml}</p><p class="mbig" style="font-size:1.7rem">${n.alert?'Precisa de atenção':n.warn?'Quase lá':'Tudo em ordem'}</p>
+  const vazio=!S.tx.length;
+  let h=`<section class="mhero dhero"><p class="lbl">Dicas de ${ml}</p><p class="mbig" style="font-size:1.7rem">${vazio?'Comece por aqui':n.alert?'Precisa de atenção':n.warn?'Quase lá':'Tudo em ordem'}</p>
     <div class="dstats"><div><b>${n.alert}</b><small>${n.alert===1?'alerta':'alertas'}</small></div><div><b>${n.warn}</b><small>${n.warn===1?'atenção':'atenções'}</small></div><div><b>${oks}</b><small>${oks===1?'ponto bom':'pontos bons'}</small></div></div>
-    <p class="msub">${n.alert||n.warn?'Toque numa dica para ver o que fazer.':'Nada urgente agora. Veja as dicas para ir além.'}</p></section>`;
+    <p class="msub">${vazio?'As dicas aparecem conforme você registra.':n.alert||n.warn?'Toque numa dica para ver o que fazer.':'Nada urgente agora. Veja as dicas para ir além.'}</p></section>`;
   list.forEach((t,i)=>{
     const a=actFor(t);
     h+=`<details class="card tipd"${i===(first<0?0:first)?' open':''}><summary><span class="ic ${t.lv}" aria-hidden="true">${{alert:'!',warn:'!',ok:'✓',info:'i'}[t.lv]}</span><span class="sr">${TAG[t.lv]}: </span><b>${esc(t.t)}</b></summary>
