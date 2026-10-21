@@ -1517,7 +1517,7 @@ document.addEventListener('click',e=>{
   }
   else if(a==='wipeall'){
     if(S.db&&(S.offline||!navigator.onLine)){S.confirm=null;render();toast('Para apagar tudo da sua conta, conecte-se à internet.');return}
-    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent,rems:S.cfg.rems,tipH:S.cfg.tipH};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
+    S.confirm=null;S.tx=[];S.prevTx=[];S.nextTx=[];S.open=null;S.undo=null;S.undoFn=null;S.aiText='';const nome=S.cfg.name,look={theme:S.cfg.theme,accent:S.cfg.accent,rems:S.cfg.rems,tipH:S.cfg.tipH,tipM:S.cfg.tipM};loadCfg(null);S.cfg={...S.cfg,name:nome,...look};S.tab='resumo';
     if(S.db){
       const base='data/users/'+S.uid,pre='mbc:'+S.uid+':';
       try{Object.keys(localStorage).filter(k=>k.startsWith(pre)).forEach(k=>localStorage.removeItem(k))}catch(err){}
@@ -1625,7 +1625,8 @@ function loadCfg(raw){
     names:d.names&&typeof d.names==='object'?d.names:{},custom:Array.isArray(d.custom)?d.custom:[],name:typeof d.name==='string'?d.name.slice(0,30):'',recs:Array.isArray(d.recs)?d.recs:[],
     theme:['auto','light','dark'].includes(d.theme)?d.theme:'auto',accent:['green','blue','purple','orange'].includes(d.accent)?d.accent:'green',
     rems:Array.isArray(d.rems)?d.rems.filter(r=>r&&typeof r.id==='string'&&['d','u','ult','fim'].includes(r.k)&&Number.isInteger(r.n)&&[8,9,12,18,20].includes(r.h)).slice(0,8):null,
-    tipH:Number.isInteger(d.tipH)&&d.tipH>=6&&d.tipH<=22?d.tipH:19};
+    tipH:Number.isInteger(d.tipH)&&d.tipH>=6&&d.tipH<=22?d.tipH:19,
+    tipM:Number.isInteger(d.tipM)&&d.tipM>=0&&d.tipM<=55&&d.tipM%5===0?d.tipM:0};
 }
 async function start(){
   render();
@@ -1910,19 +1911,21 @@ document.addEventListener('change',e=>{
 
 /* dicas diárias de investimento: 10 dicas no Calendário, uma por dia, no horário escolhido */
 const TIP_H=Array.from({length:17},(_,i)=>i+6);
+const TIP_M=Array.from({length:12},(_,i)=>i*5);
 const tipH=()=>TIP_H.includes(S.cfg.tipH)?S.cfg.tipH:19;
-const tipUrl=()=>new URL('l/dica-'+pad(tipH())+'.ics',APP_URL).href.replace(/^https?:/,'webcal:');
+const tipM=()=>TIP_M.includes(S.cfg.tipM)?S.cfg.tipM:0;
+const tipUrl=()=>new URL('l/dica-'+pad(tipH())+pad(tipM())+'.ics',APP_URL).href.replace(/^https?:/,'webcal:');
 function tipsCard(){
   return `<section class="card"><h2>Dicas diárias de investimento</h2>
     <p class="hint">Uma dica curta por dia, em um ciclo de 50 dicas que recomeça sozinho. Chega como aviso do Calendário. É conteúdo educativo, não uma recomendação personalizada.</p>
-    <label class="hint" for="tiph" style="margin-top:12px">Horário do aviso</label>
-    <select id="tiph">${remOpts(TIP_H.map(x=>[x,x+'h']),tipH())}</select>
+    <label class="hint" for="tiph" style="margin-top:12px">Horário do aviso (de 5 em 5 minutos)</label>
+    <div style="display:flex;gap:10px"><select id="tiph" aria-label="Hora" style="flex:1">${remOpts(TIP_H.map(x=>[x,pad(x)+'h']),tipH())}</select><select id="tipm" aria-label="Minuto" style="flex:1">${remOpts(TIP_M.map(x=>[x,pad(x)+' min']),tipM())}</select></div>
     <div class="acts2" style="margin-top:12px"><a class="primary" style="display:inline-flex;align-items:center;text-decoration:none" href="${tipUrl()}">Ativar no Calendário</a></div>
     <p class="hint" style="margin-top:12px">Se você mudar o horário depois de ativar, apague o antigo: abra o <b>Calendário</b> > <b>Calendários</b>, toque no <b>ⓘ</b> do calendário "Meu Bolso · Dicas" e em <b>Cancelar assinatura</b>.</p></section>`;
 }
 document.addEventListener('change',e=>{
-  if(e.target.id!=='tiph')return;
-  S.cfg={...S.cfg,tipH:+e.target.value};saveCfg();render();
+  const id=e.target.id;if(id!=='tiph'&&id!=='tipm')return;
+  S.cfg={...S.cfg,[id==='tiph'?'tipH':'tipM']:+e.target.value};saveCfg();render();
 });
 /* passo a passo para instalar o app, mostrado a quem abre o link pelo navegador */
 const inst={step:0,deferred:null};
