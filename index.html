@@ -194,7 +194,8 @@ input.moeda{text-align:right}
 .mring span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:1.2rem;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.mring .fg{animation:ringIn .9s cubic-bezier(.22,1,.36,1)}}
 @keyframes ringIn{from{stroke-dashoffset:var(--c)}}
-.mhero .chips{margin:10px 0 0}
+.mhero .chips{margin:10px 0 0;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.mhero .chips .chip{padding:8px 0;text-align:center}
 .mhero .chip{background:rgba(255,255,255,.16);color:#fff}
 .mhero .chip[aria-pressed="true"]{background:#fff;color:var(--hero-b,#07503C);font-weight:600}
 .mhero .slider{accent-color:#fff;margin:12px 0 2px}
@@ -249,13 +250,12 @@ input.moeda{text-align:right}
 .limhead .ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:var(--c);background:var(--fill)}
 @supports (background:color-mix(in srgb,red 10%,transparent)){.limhead .ico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
 .exhero{padding:16px 14px 14px}
-.exrow{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:6px;align-items:end}
+.exrow{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:4px;align-items:end}
 .exrow>div{min-width:0;padding:0 2px}
 .exrow small{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.75);white-space:nowrap}
-.exrow b{display:block;font-family:var(--font-display);font-size:.8rem;font-weight:700;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:3px}
-.exrow .main{background:rgba(255,255,255,.16);border-radius:12px;padding:8px 10px}
-.exrow .main b{font-size:.98rem}
-@media (max-width:359px){.exrow b{font-size:.72rem}.exrow .main b{font-size:.86rem}}
+.exrow b{display:block;font-family:var(--font-display);font-size:clamp(.66rem,2.9vw,.8rem);font-weight:700;letter-spacing:-.03em;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:3px}
+.exrow .main{background:rgba(255,255,255,.16);border-radius:12px;padding:8px 7px}
+.exrow .main b{font-size:clamp(.78rem,3.4vw,.98rem)}
 /* dicas */
 .dica{margin-top:12px}
 .dica .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px}
@@ -546,6 +546,28 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
   .app{padding-bottom:calc(var(--barb) + 130px)}
 }
 @media (prefers-reduced-motion:reduce){.nav,.chip,.primary,.ghost,.fab{transition:none}}
+
+/* ---------- harmonia final: tamanhos, espaços e nada fora do lugar ---------- */
+:root{--r-card:22px;--r-in:14px;--gap:12px}
+.card,.mhero,.hero{margin-top:var(--gap)}
+.hero{margin-top:6px}
+.app{overflow-x:clip}
+.card,.mhero,.hero,.lista,.tipd{max-width:100%}
+.card h2,.mhero .mbig,.item .t b,.limhead .n b{overflow-wrap:anywhere}
+.io.t3{grid-template-columns:repeat(3,1fr);gap:8px}
+.io.t3 div{padding:10px 10px}
+.io.t3 dt{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
+.io.t3 dd{font-size:.86rem;white-space:nowrap;letter-spacing:-.02em}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:12px -16px 0;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips.scroll::-webkit-scrollbar{display:none}
+@media (max-width:379px){.chips.scroll .cn{display:none}}
+.chips.scroll{gap:6px}
+.chips.scroll .chip{flex:none;white-space:nowrap;padding:8px 12px;font-size:.9rem}
+.fab{width:56px;padding:0;justify-content:center;aspect-ratio:1/1;border-radius:50%}
+.fab svg{margin:0}
+.limhead .n small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mhero .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dia h3{margin-bottom:8px}
 </style>
 
 </head>
@@ -560,7 +582,7 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
   <main id="main"></main>
 </div>
 
-<button class="fab" data-act="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Registrar</button>
+<button class="fab" data-act="add" aria-label="Registrar lançamento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
 
 <nav class="tabs" aria-label="Seções">
   <span class="tabind" id="tabind" aria-hidden="true"></span>
@@ -1094,7 +1116,7 @@ function vResumo(c,p){
   const goal=c.inc*S.cfg.savePct/100;
   let h=`<section class="hero"><p class="ola">${saud()}, ${esc(S.cfg.name)}</p><p class="lbl">${c.bal>=0?'Sobra do mês':'Faltou no mês'}</p>
     <p class="big ${c.bal<0?'neg':''}">${brl(c.bal)}</p>
-    <dl class="io"><div><dt>Entrou</dt><dd class="pos">${brl(c.inc)}</dd></div><div><dt>Saiu</dt><dd>${brl(c.exp)}</dd></div>${c.inv>0?`<div style="grid-column:1/-1"><dt>Investiu</dt><dd style="color:var(--need)">${brl(c.inv)}</dd></div>`:''}</dl></section>`;
+    <dl class="io ${c.inv>0?'t3':''}"><div><dt>Entrou</dt><dd class="pos" title="${brl(c.inc)}">${c.inv>0?brlC(c.inc):brl(c.inc)}</dd></div><div><dt>Saiu</dt><dd title="${brl(c.exp)}">${c.inv>0?brlC(c.exp):brl(c.exp)}</dd></div>${c.inv>0?`<div><dt>Investiu</dt><dd title="${brl(c.inv)}">${brlC(c.inv)}</dd></div>`:''}</dl></section>`;
   if(!isStandalone())h+=`<p class="aviso">Instale o app para usar sem internet.<br><button class="ghost" style="margin-top:8px" data-act="installguide">Ver como instalar</button></p>`;
   if(isCurrent()&&ymOf(lastBiz(S.ym))+'-'+pad(lastBiz(S.ym).getDate())===todayStr()){
     h+=`<section class="card"><span class="tag ok" style="display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px">Hoje</span>
@@ -1154,8 +1176,8 @@ function exFiltered(){
 function exDay(date){
   const y=new Date();y.setDate(y.getDate()-1);
   const ys=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
-  const d=cap(new Date(date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}));
-  return (date===todayStr()?'Hoje · ':date===ys?'Ontem · ':'')+d;
+  const dt=new Date(date+'T12:00:00'),dm=dt.toLocaleDateString('pt-BR',{day:'numeric',month:'short'}).replace('.',''),wd=cap(dt.toLocaleDateString('pt-BR',{weekday:'long'}).replace('-feira',''));
+  return date===todayStr()?'Hoje · '+dm:date===ys?'Ontem · '+dm:wd+' · '+dm;
 }
 /* ---------- miniaturas: marcas conhecidas (inicial + cores da marca) e ícone por categoria ---------- */
 const BRANDS=[
@@ -1239,12 +1261,12 @@ function vExtrato(){
   const cnt={todos:n,gastos:S.tx.filter(t=>t.t==='e').length,entradas:S.tx.filter(t=>t.t==='i').length,invest:S.tx.filter(t=>t.t==='v').length};
   if(!n)return `<section class="card vazio"><h2>Nada por aqui</h2><p>Os lançamentos de ${esc(monthLabel().toLowerCase())} aparecem neste extrato.</p><button class="primary" data-act="add">Registrar</button></section>`;
   const cell=(l,v,cls)=>`<div class="${cls||''}"><small>${l}</small><b title="${brl(v)}" aria-label="${l}: ${brl(v)}">${brlC(v)}</b></div>`;
-  let h=`<section class="mhero exhero${c.bal<0?' neg':''}"><p class="msub" style="margin:0 0 12px">${esc(monthLabel())} · ${n} ${n===1?'lançamento':'lançamentos'}</p>
+  let h=`<section class="mhero exhero${c.bal<0?' neg':''}"><p class="msub" style="margin:0 0 12px">${n} ${n===1?'lançamento':'lançamentos'} no mês</p>
     <div class="exrow">${cell('Saldo',c.bal,'main')}${cell('Entradas',c.inc)}${cell('Gastos',c.exp)}${cell('Investido',c.inv)}</div></section>
     <div class="exq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="exq" type="search" placeholder="Buscar por nome ou categoria" value="${esc(S.q||'')}" aria-label="Buscar lançamentos" autocomplete="off" enterkeyhint="search"></div>
-    <div class="chips" role="group" aria-label="Filtro" style="margin-top:12px">`+
-    [['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investimentos']].map(([k,t])=>`<button class="chip" data-act="flt" data-f="${k}" aria-pressed="${f===k}">${t} <span class="cn">${cnt[k]}</span></button>`).join('')+`</div>
+    <div class="chips scroll" role="group" aria-label="Filtro" style="margin-top:12px">`+
+    [['todos','Tudo'],['gastos','Gastos'],['entradas','Entradas'],['invest','Investido']].map(([k,t])=>`<button class="chip" data-act="flt" data-f="${k}" aria-pressed="${f===k}">${t} <span class="cn">${cnt[k]}</span></button>`).join('')+`</div>
     <div id="exlist" aria-live="polite">${exList(exFiltered())}</div>`;
   return h;
 }
@@ -1252,7 +1274,7 @@ function vExtrato(){
 function vMetas(c){
   const pc=S.cfg.savePct,goal=c.inc*pc/100,got=c.saved,ok=goal>0&&got>=goal,frac=goal>0?Math.min(1,got/goal):0,CI=2*Math.PI*44;
   let h=`<section class="mhero"><div class="mtop"><div class="mring" role="img" aria-label="${Math.round(frac*100)}% da meta"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="bg"/><circle cx="50" cy="50" r="44" class="fg" style="--c:${CI.toFixed(1)};--o:${(CI*(1-frac)).toFixed(1)}"/></svg><span>${Math.round(frac*100)}%</span></div>
-    <div class="mtxt"><p class="lbl">Guardado em ${esc(monthLabel().toLowerCase())}</p><p class="mbig">${brl(got)}</p>
+    <div class="mtxt"><p class="lbl">Guardado no mês</p><p class="mbig">${brl(got)}</p>
     <p class="msub">${goal>0?(ok?`Meta de ${brl(goal)} batida`:`Faltam ${brl(goal-got)} para ${brl(goal)}`):(c.inc>0?'Sem meta de economia':'Registre sua renda para ver a meta')}</p></div></div>
     <p class="mlbl">Guardar <b><span id="pctv">${pc}</span>%</b> da renda</p>
     <div class="chips" role="group" aria-label="Percentual da renda a guardar">${[5,10,15,20,30].map(v=>`<button class="chip" data-act="savepct" data-v="${v}" aria-pressed="${pc===v}">${v}%</button>`).join('')}</div>
@@ -1263,7 +1285,7 @@ function vMetas(c){
   const row=({k,v,lim})=>{
     const open=S.limOpen===k.id,over=lim&&v>lim;
     let r=`<div class="lim${open?' open':''}"><button type="button" class="limhead" data-act="limopen" data-id="${esc(k.id)}" aria-expanded="${open}">
-      ${catIco(k.id,k.n)}<span class="n"><b>${esc(k.n)}</b><small>${lim?(over?`passou ${brl(v-lim)} · limite ${brl(lim)}`:`${brl(v)} de ${brl(lim)} · restam ${brl(lim-v)}`):(v>0?`gasto ${brl(v)} · sem limite`:'sem gasto · sem limite')}</small>
+      ${catIco(k.id,k.n)}<span class="n"><b>${esc(k.n)}</b><small>${lim?(over?`${brl(v)} de ${brl(lim)}`:`${brl(v)} de ${brl(lim)}`):(v>0?`gasto ${brl(v)} · sem limite`:'sem gasto · sem limite')}</small>
       ${lim?`<span class="track"><i class="${over?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></span>`:''}</span>${lim?`<span class="pl ${over?'over':v>lim*.8?'warn':'ok'}">${over?'Passou':v>lim*.8?'Perto':'Ok'}</span>`:''}<span class="car" aria-hidden="true"></span></button>`;
     if(open){
       const sug=[...new Set([v>0?Math.ceil(v*1.1/50)*50:0,100,200,300,500,1000].filter(x=>x>0))].slice(0,5);
@@ -1396,7 +1418,7 @@ function render(){
   if(!S.loaded||!S.cfgLoaded){main.innerHTML='<p class="hint" style="padding:40px 4px">Carregando seus lançamentos…</p>';return}
   const c=calc(S.tx),p=calc(S.prevTx);
   main.innerHTML=S.tab==='resumo'?vResumo(c,p):S.tab==='extrato'?vExtrato():S.tab==='metas'?vMetas(c):S.tab==='ajustes'?vAjustes(c):vDicas(c,p);
-  $('.fab').hidden=false;
+  $('.fab').hidden=S.tab==='ajustes';
 }
 
 /* ---------- abas: pílula deslizante e transição do conteúdo ---------- */
