@@ -608,6 +608,8 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .descw .ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:1rem;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
 .descw .ico:not([hidden])+input{padding-left:50px}
 #dq{margin:2px 0 4px}
+#sugwrap .chips.scroll{margin:2px -16px 6px}
+#sugs .chip{max-width:200px;overflow:hidden;text-overflow:ellipsis}
 /* ---------- harmonia final: tamanhos, espaços e nada fora do lugar ---------- */
 :root{--r-card:22px;--r-in:14px;--gap:12px}
 .card,.mhero,.hero{margin-top:var(--gap)}
@@ -688,6 +690,7 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
     <div class="ctiles" id="catchips" role="group" aria-labelledby="catlbl"></div>
     <label for="desc">Nome do lançamento (opcional)</label>
     <div class="descw"><span class="ico br" id="descico" hidden aria-hidden="true"></span><input id="desc" type="text" maxlength="60" autocomplete="off" placeholder="Ex.: Mercado da semana, Aluguel, Pix do João"></div>
+    <div id="sugwrap" hidden><div class="chips scroll" id="sugs" role="group" aria-label="Nomes usados antes"></div></div>
     <label for="dt">Data</label>
     <div class="chips" id="dq" role="group" aria-label="Atalhos de data"><button type="button" class="chip" data-act="dq" data-d="0">Hoje</button><button type="button" class="chip" data-act="dq" data-d="1">Ontem</button></div>
     <input id="dt" type="date">
@@ -1261,7 +1264,7 @@ const BRANDS=[
   ['enel','#FF0000','#fff'],['sabesp','#0072BC','#fff'],['cemig','#00843D','#fff'],['copel','#009FE3','#fff'],['livelo','#E6007E','#fff'],['hotmart','#F04E23','#fff'],
   ['duolingo','#58CC02','#fff'],['udemy','#A435F0','#fff'],['alura','#1B2F5B','#4BD5E0'],['tinder','#FE3C72','#fff'],['bumble','#FFC629','#000']
 ];
-const BRAND_LIST=BRANDS.flatMap(([keys,bg,fg])=>keys.split('|').map(k=>({k:' '+k+' ',bg,fg,ch:keys[0].toUpperCase()})));
+const BRAND_LIST=BRANDS.flatMap(([keys,bg,fg])=>keys.split('|').map(k=>({k:' '+k+' ',bg,fg,ch:keys[0].toUpperCase(),id:keys.split('|')[0]})));
 const normTxt=x=>' '+String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
 const brandCache=new Map();
 function brandOf(d){
@@ -1271,6 +1274,16 @@ function brandOf(d){
   if(brandCache.size>500)brandCache.clear();
   brandCache.set(d,r);return r;
 }
+const BCAT={};
+for(const k of 'ifood|rappi|mcdonald|burger king|subway|starbucks'.split('|'))BCAT[k]='fora';
+for(const k of 'uber|99|shell|ipiranga|petrobras|sem parar'.split('|'))BCAT[k]='transporte';
+for(const k of 'netflix|spotify|disney|hbo|youtube|apple|google|microsoft|claude|chatgpt|duolingo'.split('|'))BCAT[k]='assin';
+for(const k of 'carrefour|pao de acucar|assai|atacadao'.split('|'))BCAT[k]='mercado';
+for(const k of 'drogasil|raia|pague menos|smart fit'.split('|'))BCAT[k]='saude';
+for(const k of 'mercado livre|mercado pago|amazon|shopee|magalu|americanas|shein|zara|renner|riachuelo|aliexpress|kabum'.split('|'))BCAT[k]='compras';
+for(const k of 'vivo|claro|tim|oi|enel|sabesp|cemig|copel'.split('|'))BCAT[k]='moradia';
+for(const k of 'latam|gol|airbnb|booking|tinder|bumble'.split('|'))BCAT[k]='lazer';
+for(const k of 'udemy|alura'.split('|'))BCAT[k]='educacao';
 const GL={
   moradia:'<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
   mercado:'<circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/><path d="M3 4h2l2.4 10.5a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L19 8H6"/>',
@@ -1563,7 +1576,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(placeInd);
 
 /* ---------- lançamento ---------- */
 function openSheet(t){
-  S.editId=t?t.id:null;S.kind=t?t.t:'e';S.cat=t?t.c:null;
+  S.editId=t?t.id:null;S.kind=t?t.t:'e';S.cat=t?t.c:null;S.catTouched=!!t;
   $('#amt').value=t?moneyField(t.v):'';$('#desc').value=t?t.d:'';$('#erro').textContent='';
   const dt=$('#dt'),first=S.ym+'-01',last=S.ym+'-'+pad(daysIn(S.ym));
   dt.min=first;dt.max=last;dt.value=t?t.date:(isCurrent()?todayStr():first);
@@ -1665,6 +1678,29 @@ function resetDrag(){const sh=$('#form');sh.style.transition='';sh.style.transfo
   sb.addEventListener('touchcancel',e=>{if(mode==='drag')finish(e.timeStamp);else{y0=null;mode=null;sh.style.transition=''}});
   scrim.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 })();
+function sugList(){
+  const m=new Map();
+  for(const t of [...S.tx,...S.prevTx]){
+    if(t.t!==S.kind||!t.d||t.grp)continue;
+    const k=t.d.trim().toLowerCase(),e=m.get(k)||{d:t.d.trim(),n:0,last:'',v:0,c:t.c};
+    e.n++;if(t.date>=e.last){e.last=t.date;e.v=t.v;e.c=t.c;e.d=t.d.trim()}m.set(k,e);
+  }
+  return [...m.values()].sort((a,b)=>b.n-a.n||b.last.localeCompare(a.last)).slice(0,6);
+}
+function paintSugs(){
+  const w=$('#sugwrap');if(!w)return;
+  const show=!S.editId&&!$('#desc').value.trim()&&S.kind!==undefined;
+  S.sugs=show?sugList():[];
+  w.hidden=!S.sugs.length;
+  $('#sugs').innerHTML=S.sugs.map((x,i)=>`<button type="button" class="chip" data-act="sug" data-i="${i}">${esc(x.d)}</button>`).join('');
+}
+function autoCat(){
+  if(S.catTouched||S.editId||S.kind!=='e')return;
+  const d=$('#desc').value.trim();if(!d)return;
+  const old=[...S.tx,...S.prevTx].find(t=>t.t==='e'&&t.d&&t.d.trim().toLowerCase()===d.toLowerCase());
+  const b=brandOf(d),c=old?old.c:(b&&BCAT[b.id]);
+  if(c&&c!==S.cat&&allCats('e').some(x=>x.id===c)){S.cat=c;paintForm()}
+}
 function paintDescIco(){
   const el=$('#descico'),b=brandOf($('#desc').value);
   if(!el)return;
@@ -1676,7 +1712,7 @@ function paintForm(){
   $('#catchips').innerHTML=cats.map(c=>`<button type="button" class="ctile" data-act="cat" data-c="${c.id}" aria-pressed="${c.id===S.cat}">${catIco(c.id,c.n)}<span>${esc(c.n)}</span></button>`).join('');
   $('#form').dataset.kind=S.kind;
   if(!S.editId)$('#savebtn').textContent={e:'Salvar gasto',i:'Salvar entrada',v:'Salvar investimento'}[S.kind];
-  paintDescIco();
+  paintDescIco();paintSugs();
   $('#parcbox').hidden=S.kind!=='e';
   paintParc();
 }
@@ -1803,7 +1839,13 @@ document.addEventListener('click',e=>{
   if(a==='prev'||a==='next'){S.ym=shiftYm(S.ym,a==='prev'?-1:1);S.open=null;watchMonth();slideMain(a==='prev'?'go-l':'go-r')}
   else if(a==='add')openSheet();
   else if(a==='close')dismissSheet();
-  else if(a==='cat'){S.cat=el.dataset.c;paintForm()}
+  else if(a==='cat'){S.cat=el.dataset.c;S.catTouched=true;paintForm()}
+  else if(a==='sug'){
+    const x=(S.sugs||[])[+el.dataset.i];if(!x)return;
+    $('#desc').value=x.d;S.cat=x.c;S.catTouched=true;
+    if(!$('#amt').value.trim()){$('#amt').value=moneyField(x.v)}
+    paintForm();
+  }
   else if(a==='dq'){
     const d=new Date();d.setDate(d.getDate()-(+el.dataset.d));
     const v=ymOf(d)+'-'+pad(d.getDate()),dt=$('#dt');
@@ -1917,7 +1959,7 @@ document.addEventListener('input',e=>{
     const m=maskMoney(e.target.value);if(e.target.value!==m)e.target.value=m;
   }
   if(e.target.id==='exq'){S.q=e.target.value;paintEx();return}
-  if(e.target.id==='desc')paintDescIco();
+  if(e.target.id==='desc'){paintDescIco();paintSugs();autoCat()}
   if(e.target.id==='np'){S.rec=false;paintParc()}
   else if(e.target.id==='amt')paintParc();
   if(e.target.id==='sl'){
