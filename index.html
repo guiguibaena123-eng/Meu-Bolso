@@ -568,6 +568,24 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 .acc>.tb .chips{margin-top:0}
 .foot{text-align:center;color:var(--muted);font-size:.8rem;margin:26px 0 0}
 .seg button{transition:background .2s ease,color .2s ease,box-shadow .2s ease}
+/* acabamento profissional: resumo e barra de abas */
+.aviso2{display:flex;align-items:center;gap:12px;margin-top:var(--gap);background:var(--surface);border-radius:var(--r-card);padding:10px 12px 10px 12px;box-shadow:var(--shadow);font-size:.9rem;color:var(--muted)}
+.aviso2 span:not(.sico){flex:1;min-width:0;line-height:1.3}
+.chd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.chd h2{margin:0}
+.lnk{border:0;background:var(--fill);color:var(--accent);font-weight:600;font-size:.85rem;border-radius:999px;padding:6px 12px;min-height:32px}
+.lnk:active{transform:scale(.95)}
+.meta-line{align-items:center}
+.cat.ci{display:grid;grid-template-columns:38px 1fr;gap:12px;align-items:center}
+.cat.ci .cw{min-width:0}
+.cat.ci .row{margin-bottom:6px}
+.cat.ci .ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:var(--c);background:var(--fill)}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.cat.ci .ico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
+.cat.ci .ico svg{width:20px;height:20px}
+.cats{gap:16px}
+.tabs button.dot::after{content:"";position:absolute;top:8px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:var(--out);box-shadow:0 0 0 2px var(--surface)}
+.tabs button{letter-spacing:-.01em}
+.tabs button svg{width:23px;height:23px}
 /* ---------- harmonia final: tamanhos, espaços e nada fora do lugar ---------- */
 :root{--r-card:22px;--r-in:14px;--gap:12px}
 .card,.mhero,.hero{margin-top:var(--gap)}
@@ -1138,7 +1156,7 @@ function vResumo(c,p){
   let h=`<section class="hero"><p class="ola">${saud()}, ${esc(S.cfg.name)}</p><p class="lbl">${c.bal>=0?'Sobra do mês':'Faltou no mês'}</p>
     <p class="big ${c.bal<0?'neg':''}">${brl(c.bal)}</p>
     <dl class="io ${c.inv>0?'t3':''}"><div><dt>Entrou</dt><dd class="pos" title="${brl(c.inc)}">${c.inv>0?brlC(c.inc):brl(c.inc)}</dd></div><div><dt>Saiu</dt><dd title="${brl(c.exp)}">${c.inv>0?brlC(c.exp):brl(c.exp)}</dd></div>${c.inv>0?`<div><dt>Investiu</dt><dd title="${brl(c.inv)}">${brlC(c.inv)}</dd></div>`:''}</dl></section>`;
-  if(!isStandalone())h+=`<p class="aviso">Instale o app para usar sem internet.<br><button class="ghost" style="margin-top:8px" data-act="installguide">Ver como instalar</button></p>`;
+  if(!isStandalone())h+=`<div class="aviso2">${sico('fone','#7C5CFF')}<span>Instale o app para usar sem internet.</span><button class="ghost sm" data-act="installguide">Instalar</button></div>`;
   if(isCurrent()&&ymOf(lastBiz(S.ym))+'-'+pad(lastBiz(S.ym).getDate())===todayStr()){
     h+=`<section class="card"><span class="tag ok" style="display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px">Hoje</span>
       <h2 style="margin-bottom:6px">Último dia útil do mês</h2><p class="hint" style="margin-bottom:12px">Hora de fechar ${esc(monthLabel().toLowerCase())}: confira se registrou tudo e veja as dicas do mês.</p>
@@ -1159,9 +1177,11 @@ function vResumo(c,p){
   }
   if(c.inc>0){
     const p=Math.max(0,Math.min(100,pct(c.saved,goal||1)));
-    h+=`<section class="card"><h2>Meta de economia</h2>
-      <div class="meta-line"><span>Guardado até agora: <b class="num">${brl(c.saved)}</b></span><span>meta ${brl(goal)} (${S.cfg.savePct}%)</span></div>
-      <div class="track" role="img" aria-label="${Math.round(p)}% da meta"><i style="width:${p}%"></i></div></section>`;
+    const ok=c.saved>=goal;
+    h+=`<section class="card"><div class="chd"><h2>Meta de economia</h2><button class="lnk" data-tab="metas">Ajustar</button></div>
+      <div class="meta-line"><span>Guardado: <b class="num">${brl(c.saved)}</b></span><span class="pl ${ok?'ok':'warn'}">${ok?'Meta batida':Math.round(p)+'%'}</span></div>
+      <div class="track" role="img" aria-label="${Math.round(p)}% da meta"><i style="width:${p}%"></i></div>
+      <p class="hint" style="margin-top:8px">Meta de ${brl(goal)} (${S.cfg.savePct}% da renda)</p></section>`;
   }
   const D=Math.max(c.inc,c.exp+c.inv)||1,pn=pct(c.need,D),pw=pct(c.want,D),ps=pct(c.saved,D);
   h+=`<section class="card"><h2>Como seu dinheiro se divide</h2>
@@ -1177,12 +1197,12 @@ function vResumo(c,p){
     const max=cats[0][1];
     h+=`<section class="card"><h2>Para onde foi o dinheiro</h2><div class="cats">`+cats.map(([id,v])=>{
       const lim=S.cfg.limits[id];const base=Math.max(max,lim||0);
-      return `<div class="cat"><div class="row"><span>${esc(nameOf(id))}<small>${Math.round(pct(v,c.exp))}%</small></span><span>${brl(v)}</span></div>
-        <div class="track"><i class="${lim&&v>lim?'over':''}" style="width:${pct(v,base)}%"></i>${lim?`<u style="left:calc(${pct(lim,base)}% - 1px)" title="Limite ${brl(lim)}"></u>`:''}</div></div>`}).join('')+`</div></section>`;
+      return `<div class="cat ci">${catIco(id,nameOf(id))}<div class="cw"><div class="row"><span>${esc(nameOf(id))}<small>${Math.round(pct(v,c.exp))}%</small></span><span>${brl(v)}</span></div>
+        <div class="track"><i class="${lim&&v>lim?'over':''}" style="width:${pct(v,base)}%"></i>${lim?`<u style="left:calc(${pct(lim,base)}% - 1px)" title="Limite ${brl(lim)}"></u>`:''}</div></div></div>`}).join('')+`</div></section>`;
   }
   const invs=Object.entries(c.invBy).sort((a,b)=>b[1]-a[1]);
   if(invs.length){
-    h+=`<section class="card"><h2>Investimentos do mês</h2><div class="cats">`+invs.map(([id,v])=>`<div class="cat"><div class="row"><span>${esc(nameOf(id))}</span><span>${brl(v)}</span></div></div>`).join('')+`</div></section>`;
+    h+=`<section class="card"><h2>Investimentos do mês</h2><div class="cats">`+invs.map(([id,v])=>`<div class="cat ci">${catIco(id,nameOf(id))}<div class="cw"><div class="row"><span>${esc(nameOf(id))}</span><span>${brl(v)}</span></div></div></div>`).join('')+`</div></section>`;
   }
   return h;
 }
@@ -1438,6 +1458,12 @@ function vDicas(c,p){
 
 /* ---------- render ---------- */
 const monthLabel=()=>{const [y,m]=S.ym.split('-').map(Number);return cap(new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}))};
+function tabBadges(c){
+  const over=Object.entries(S.cfg.limits||{}).some(([id,l])=>l&&(c.by[id]||0)>l);
+  const warn=(c.inc>0&&c.inc-c.exp<0)||over;
+  const set=(t,on)=>{const b=document.querySelector('.tabs button[data-tab="'+t+'"]');if(b)b.classList.toggle('dot',!!on)};
+  set('metas',over);set('dicas',warn);
+}
 function render(){
   $('#mes').textContent=S.tab==='ajustes'?'Ajustes':monthLabel();
   $('#mes').classList.toggle('plain',S.tab==='ajustes');
@@ -1454,6 +1480,7 @@ function render(){
   if(S.pendRem){main.innerHTML=vRemind();return}
   if(!S.loaded||!S.cfgLoaded){main.innerHTML='<p class="hint" style="padding:40px 4px">Carregando seus lançamentos…</p>';return}
   const c=calc(S.tx),p=calc(S.prevTx);
+  tabBadges(c);
   main.innerHTML=S.tab==='resumo'?vResumo(c,p):S.tab==='extrato'?vExtrato():S.tab==='metas'?vMetas(c):S.tab==='ajustes'?vAjustes(c):vDicas(c,p);
   $('.fab').hidden=S.tab==='ajustes';
   if(S.tab==='ajustes')appVer();
