@@ -244,6 +244,10 @@ input.moeda{text-align:right}
 .item .t small{display:block;font-size:.85rem;margin-top:1px}
 .item .ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:var(--c);background:var(--fill)}
 @supports (background:color-mix(in srgb,red 10%,transparent)){.item .ico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
+.item .ico svg,.limhead .ico svg{width:20px;height:20px}
+.ico.br{font-family:var(--font-display);font-weight:800;font-size:1.1rem;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)}
+.limhead .ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:var(--c);background:var(--fill)}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.limhead .ico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
 /* dicas */
 .dica{margin-top:12px}
 .dica .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px}
@@ -1144,6 +1148,66 @@ function exDay(date){
   const d=cap(new Date(date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}));
   return (date===todayStr()?'Hoje · ':date===ys?'Ontem · ':'')+d;
 }
+/* ---------- miniaturas: marcas conhecidas (inicial + cores da marca) e ícone por categoria ---------- */
+const BRANDS=[
+  ['nubank|nu','#820AD1','#fff'],['netflix','#141414','#E50914'],['spotify','#191414','#1DB954'],['ifood','#EA1D2C','#fff'],
+  ['uber','#000','#fff'],['99|99pop|99food','#FFD400','#000'],['amazon|prime video|primevideo','#232F3E','#FF9900'],['mercado livre|mercadolivre','#FFE600','#2D3277'],
+  ['mercado pago|mercadopago','#00B1EA','#fff'],['shopee','#EE4D2D','#fff'],['magalu|magazine luiza','#0086FF','#fff'],['americanas','#E60014','#fff'],
+  ['carrefour','#004E9F','#fff'],['pao de acucar','#E4002B','#fff'],['assai','#FF6A13','#fff'],['atacadao','#E30613','#FFD100'],
+  ['mcdonald|mcdonalds|mc donalds|mc donald','#DA291C','#FFC72C'],['burger king','#D62300','#F5EBDC'],['subway','#009743','#FFC600'],['starbucks','#00704A','#fff'],
+  ['rappi','#FF441F','#fff'],['disney','#113CCF','#fff'],['hbo|hbo max','#5822B4','#fff'],['youtube','#FF0000','#fff'],['apple|icloud','#000','#fff'],
+  ['google','#4285F4','#fff'],['microsoft|xbox','#107C10','#fff'],['claude|anthropic','#D97757','#fff'],['chatgpt|openai','#10A37F','#fff'],
+  ['inter|banco inter','#FF7A00','#fff'],['itau','#EC7000','#003399'],['bradesco','#CC092F','#fff'],['santander','#EC0000','#fff'],['caixa economica|cef','#005CA9','#F39200'],
+  ['banco do brasil|bb','#FFEF38','#003882'],['c6|c6 bank','#242424','#fff'],['picpay','#11C76F','#fff'],['vivo','#660099','#fff'],['claro','#E1171E','#fff'],
+  ['tim','#0033A0','#fff'],['oi','#FFC800','#4B2A8C'],['shell','#FFD500','#DD1D21'],['ipiranga','#005AAA','#FFD100'],['petrobras','#009B3A','#FFE600'],
+  ['smart fit|smartfit','#FFC20E','#000'],['drogasil','#00A859','#fff'],['raia|droga raia','#E30613','#fff'],['pague menos','#005BAA','#fff'],['renner','#E4002B','#fff'],
+  ['riachuelo','#E4002B','#fff'],['zara','#000','#fff'],['shein','#000','#fff'],['aliexpress','#E62E04','#fff'],['kabum','#0060B1','#FF6500'],
+  ['latam','#E4002B','#1B0088'],['gol','#FF7020','#fff'],['airbnb','#FF5A5F','#fff'],['booking','#003B95','#fff'],['sem parar','#009DDC','#fff'],
+  ['enel','#FF0000','#fff'],['sabesp','#0072BC','#fff'],['cemig','#00843D','#fff'],['copel','#009FE3','#fff'],['livelo','#E6007E','#fff'],['hotmart','#F04E23','#fff'],
+  ['duolingo','#58CC02','#fff'],['udemy','#A435F0','#fff'],['alura','#1B2F5B','#4BD5E0'],['tinder','#FE3C72','#fff'],['bumble','#FFC629','#000']
+];
+const BRAND_LIST=BRANDS.flatMap(([keys,bg,fg])=>keys.split('|').map(k=>({k:' '+k+' ',bg,fg,ch:keys[0].toUpperCase()})));
+const normTxt=x=>' '+String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
+const brandCache=new Map();
+function brandOf(d){
+  if(!d)return null;
+  if(brandCache.has(d))return brandCache.get(d);
+  const n=normTxt(d),r=BRAND_LIST.find(b=>n.includes(b.k))||null;
+  if(brandCache.size>500)brandCache.clear();
+  brandCache.set(d,r);return r;
+}
+const GL={
+  moradia:'<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  mercado:'<circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/><path d="M3 4h2l2.4 10.5a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L19 8H6"/>',
+  transporte:'<path d="M5 17h14v-5l-2-5H7l-2 5z"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/>',
+  saude:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  educacao:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/>',
+  dividas:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/>',
+  fora:'<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.2 1.2-3 3.5-3 6v3h3"/>',
+  lazer:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  assin:'<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+  compras:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  outros:'<circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/>',
+  salario:'<path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/>',
+  extra:'<path d="M12 5v14M5 12h14"/>',
+  outros_i:'<circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/>',
+  reserva:'<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>',
+  rfixa:'<path d="M5 20V12M12 20V6M19 20v-9"/>',
+  rvar:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  prev:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  inv_o:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'
+};
+const CCOL={moradia:'#6B7FD7',mercado:'#2E9E5B',transporte:'#3B82C4',saude:'#E05A6D',educacao:'#8A5CD0',dividas:'#C4572F',fora:'#E8833A',lazer:'#D6479B',assin:'#7C5CFF',compras:'#C9971C',outros:'#7A8C87',
+  salario:'#0B9E73',extra:'#20A39E',outros_i:'#5FA39A',reserva:'#1F8FBF',rfixa:'#3F7DD6',rvar:'#A04FD6',prev:'#6D8F2F',inv_o:'#4C9A8B'};
+function catIco(id,name){
+  const g=GL[id],col=CCOL[id]||'#7A8C87';
+  return `<span class="ico" style="--c:${col}" aria-hidden="true">${g?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${g}</svg>`:esc((name||'?').charAt(0).toUpperCase())}</span>`;
+}
+function txIco(t,name){
+  const b=t.t==='e'?brandOf(t.d):(t.t==='v'?null:brandOf(t.d));
+  if(b)return `<span class="ico br" style="background:${b.bg};color:${b.fg}" aria-hidden="true">${esc(b.ch)}</span>`;
+  return catIco(t.c,name);
+}
 function exList(list){
   if(!list.length)return `<section class="card vazio"><h2>Nada encontrado</h2><p>${S.q?'Nenhum lançamento combina com a busca.':'Nada neste filtro em '+esc(monthLabel().toLowerCase())+'.'}</p></section>`;
   const groups={};for(const t of list)(groups[t.date]=groups[t.date]||[]).push(t);
@@ -1151,10 +1215,10 @@ function exList(list){
   for(const date of Object.keys(groups).sort().reverse()){
     const g=groups[date],net=g.reduce((a,t)=>a+(t.t==='i'?t.v:-t.v),0);
     h+=`<section class="dia"><h3><span>${esc(exDay(date))}</span><span class="dtot">${net>=0?'+ ':'− '}${brl(Math.abs(net))}</span></h3><div class="lista">`+g.map(t=>{
-      const k=kof(t.c),cn=nm(t.c),col=t.t==='i'?'var(--accent)':t.t==='v'?'var(--save)':(k&&k.g==='need'?'var(--need)':'var(--want)');
+      const cn=nm(t.c);
       const sub=[t.d?cn:'',t.rec?'todo mês':t.grp?`parcela ${t.n}/${t.of}`:''].filter(Boolean).join(' · ');
       return `<div class="item"><button data-act="edit" data-id="${esc(t.id)}" aria-label="Editar ${esc(t.d||cn)}, ${brl(t.v)}">
-        <span class="ico" style="--c:${col}" aria-hidden="true">${esc(cn.charAt(0).toUpperCase())}</span>
+        ${txIco(t,cn)}
         <span class="t"><b>${esc(t.d||cn)}</b>${sub?`<small>${esc(sub)}</small>`:''}</span>
         <span class="v ${t.t==='i'?'in':t.t==='v'?'inv':''}">${t.t==='i'?'+ ':t.t==='v'?'↗ ':'− '}${brl(t.v)}</span></button></div>`}).join('')+`</div></section>`;
   }
@@ -1190,7 +1254,7 @@ function vMetas(c){
   const row=({k,v,lim})=>{
     const open=S.limOpen===k.id,over=lim&&v>lim;
     let r=`<div class="lim${open?' open':''}"><button type="button" class="limhead" data-act="limopen" data-id="${esc(k.id)}" aria-expanded="${open}">
-      <span class="n"><b>${esc(k.n)}</b><small>${lim?(over?`passou ${brl(v-lim)} · limite ${brl(lim)}`:`${brl(v)} de ${brl(lim)} · restam ${brl(lim-v)}`):(v>0?`gasto ${brl(v)} · sem limite`:'sem gasto · sem limite')}</small>
+      ${catIco(k.id,k.n)}<span class="n"><b>${esc(k.n)}</b><small>${lim?(over?`passou ${brl(v-lim)} · limite ${brl(lim)}`:`${brl(v)} de ${brl(lim)} · restam ${brl(lim-v)}`):(v>0?`gasto ${brl(v)} · sem limite`:'sem gasto · sem limite')}</small>
       ${lim?`<span class="track"><i class="${over?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></span>`:''}</span>${lim?`<span class="pl ${over?'over':v>lim*.8?'warn':'ok'}">${over?'Passou':v>lim*.8?'Perto':'Ok'}</span>`:''}<span class="car" aria-hidden="true"></span></button>`;
     if(open){
       const sug=[...new Set([v>0?Math.ceil(v*1.1/50)*50:0,100,200,300,500,1000].filter(x=>x>0))].slice(0,5);
