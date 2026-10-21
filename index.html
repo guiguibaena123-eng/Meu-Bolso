@@ -161,17 +161,17 @@ input.moeda{text-align:right}
 .limhead .n{flex:1;min-width:0}
 .limhead .n b{font-weight:600;display:block}
 .limhead .n small{display:block;color:var(--muted)}
-.limhead .car,.tipd summary::after{content:'';flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
-.lim.open .car,.tipd[open] summary::after{transform:rotate(-135deg)}
+.limhead .car,.tipd>summary::after{content:'';flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+.lim.open .car,.tipd[open]>summary::after{transform:rotate(-135deg)}
 .limed{padding:2px 0 14px}
 .outras{margin-top:4px}
 .tipd{padding:0;margin-top:10px}
-.tipd summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;min-height:54px;cursor:pointer}
-.tipd summary::-webkit-details-marker{display:none}
-.tipd summary b{flex:1;font-weight:600;font-family:var(--font-display);letter-spacing:-.01em;line-height:1.3}
-.tipd summary .tag{flex:none;margin:0;font-size:.68rem}
-.tipd .tb{padding:0 16px 16px}
-.tipd .tb p{color:var(--muted);font-size:.96rem}
+.tipd>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;min-height:54px;cursor:pointer}
+.tipd>summary::-webkit-details-marker{display:none}
+.tipd>summary b{flex:1;font-weight:600;font-family:var(--font-display);letter-spacing:-.01em;line-height:1.3}
+.tipd>summary .tag{flex:none;margin:0;font-size:.68rem}
+.tipd>.tb{padding:0 16px 16px}
+.tipd>.tb p{color:var(--muted);font-size:.96rem}
 .ghost.sm{min-height:40px;padding:8px 14px;font-size:.92rem}
 
 
@@ -209,10 +209,10 @@ input.moeda{text-align:right}
 .ic.ok{background:var(--ok-bg);color:var(--ok-fg)}
 .ic.info{background:var(--info-bg);color:var(--info-fg)}
 .tipd{border-radius:20px;overflow:hidden}
-.tipd summary:active{background:var(--fill)}
-.tipd .tb{border-top:.5px solid var(--line);padding-top:12px;margin:0 16px;padding-left:0;padding-right:0}
+.tipd>summary:active{background:var(--fill)}
+.tipd>.tb{border-top:.5px solid var(--line);padding-top:12px;margin:0 16px;padding-left:0;padding-right:0}
 .tipd[open]>summary{padding-bottom:12px}
-.tipd .tb .ghost{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.tipd:not(.acc)>.tb .ghost{background:var(--accent);color:var(--accent-ink);font-weight:600}
 .pl{flex:none;font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px}
 .pl.ok{background:var(--ok-bg);color:var(--ok-fg)}
 .pl.warn{background:var(--warn-bg);color:var(--warn-fg)}
@@ -547,6 +547,27 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 }
 @media (prefers-reduced-motion:reduce){.nav,.chip,.primary,.ghost,.fab{transition:none}}
 
+/* acabamento profissional: ajustes */
+.gh{margin:22px 6px 0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.gh+.card,.gh+details{margin-top:8px}
+.prof{display:flex;align-items:center;gap:14px}
+.prof .av{flex:none;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:1.6rem;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.prof .pf{flex:1;min-width:0}
+.prof input{width:100%;font:inherit;font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:#fff;background:transparent;border:0;border-bottom:1.5px solid rgba(255,255,255,.3);border-radius:0;padding:4px 0;min-height:36px;letter-spacing:-.02em}
+.prof input:focus{outline:0;border-bottom-color:#fff}
+.prof .lbl{display:block}
+.prof .msub{margin-top:6px;font-size:.85rem}
+.sico{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--c);background:var(--fill)}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.sico{background:color-mix(in srgb,var(--c) 16%,transparent)}}
+.sico svg{width:19px;height:19px}
+.acc>summary{gap:12px}
+.acc .st{flex:1;min-width:0}
+.acc .st b{display:block;flex:none;font-weight:600}
+.acc .st small{display:block;color:var(--muted);font-size:.84rem;margin-top:1px;font-weight:400}
+.acc>.tb{margin:0;padding:14px 16px 16px;border-top:.5px solid var(--line)}
+.acc>.tb .chips{margin-top:0}
+.foot{text-align:center;color:var(--muted);font-size:.8rem;margin:26px 0 0}
+.seg button{transition:background .2s ease,color .2s ease,box-shadow .2s ease}
 /* ---------- harmonia final: tamanhos, espaços e nada fora do lugar ---------- */
 :root{--r-card:22px;--r-in:14px;--gap:12px}
 .card,.mhero,.hero{margin-top:var(--gap)}
@@ -1303,39 +1324,55 @@ function vMetas(c){
 
 /* ---------- ajustes: aparência, dados e tudo que é operacional ---------- */
 const LOOKS={green:['Verde','#0B7A5E'],blue:['Azul','#1F6FB2'],purple:['Roxo','#6B4FBB'],orange:['Laranja','#C4570F']};
+const SG={
+  paleta:'<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="15.5" cy="10" r="1"/>',
+  sino:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',
+  tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/>',
+  baixar:'<path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/>',
+  fone:'<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  lixo:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+};
+const sico=(k,c)=>`<span class="sico" style="--c:${c}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SG[k]}</svg></span>`;
+const acc=(id,open,icon,col,title,sub,body)=>`<details class="card tipd acc" id="${id}"${open?' open':''}><summary>${sico(icon,col)}<span class="st"><b>${title}</b>${sub?`<small>${sub}</small>`:''}</span></summary><div class="tb">${body}</div></details>`;
+function appVer(){
+  const el=$('#appv');if(!el)return;
+  try{caches.keys().then(k=>{const m=k.map(x=>/meu-bolso-v(\d+)/.exec(x)).filter(Boolean).map(x=>+x[1]);el.textContent=m.length?Math.max(...m):'—'}).catch(()=>{el.textContent='—'})}catch(e){el.textContent='—'}
+}
 function vAjustes(c){
-  const th=S.cfg.theme||'auto',ac=S.cfg.accent||'green';
-  let h=`<section class="card"><h2>Aparência</h2>
-    <p class="lbl2">Tema</p>
-    <div class="seg" role="group" aria-label="Tema">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([v,n])=>`<button type="button" data-act="theme" data-v="${v}" aria-pressed="${th===v}">${n}</button>`).join('')}</div>
-    <p class="hint" style="margin-top:8px">Automático segue o claro e o escuro do iPhone.</p>
-    <p class="lbl2" style="margin-top:16px">Cor de destaque</p>
-    <div class="swatches" role="group" aria-label="Cor de destaque">${Object.entries(LOOKS).map(([k,[n,col]])=>`<button type="button" class="sw" data-act="accent" data-v="${k}" style="background:${col}" aria-label="${n}" aria-pressed="${ac===k}"></button>`).join('')}</div></section>
-    <section class="card"><h2>Seu nome</h2><input id="nomeinp" type="text" maxlength="30" value="${esc(S.cfg.name)}" autocomplete="given-name" aria-label="Seu nome"></section>`;
-  const hoje=new Date(),prox=(()=>{let d=lastBiz(ymOf(hoje));if(d<new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()))d=lastBiz(shiftYm(ymOf(hoje),1));return d})();
-  h+=`<section class="card"><h2>Lembretes no iPhone</h2>${remPanel()}
-    <details style="margin-top:14px"><summary class="sum">Prefere fazer à mão no app Lembretes?</summary>
-    <p class="hint" style="margin-top:8px">Crie um <b>lembrete</b> (no app Lembretes, não no Calendário), um passo de cada vez.</p>${remHtml()}</details></section>`;
+  const th=S.cfg.theme||'auto',ac=S.cfg.accent||'green',n=S.tx.length,nm=S.cfg.name||'';
+  let h=`<section class="mhero prof"><div class="av" aria-hidden="true">${esc((nm.charAt(0)||'?').toUpperCase())}</div>
+    <div class="pf"><label class="lbl" for="nomeinp">Seu nome</label><input id="nomeinp" type="text" maxlength="30" value="${esc(nm)}" autocomplete="given-name"><p class="msub">${n} ${n===1?'lançamento':'lançamentos'} em ${esc(monthLabel().toLowerCase())}</p></div></section>`;
+  h+=`<p class="gh">Aparência</p><section class="card">
+    <p class="lbl2" style="margin-top:0">Tema</p>
+    <div class="seg" role="group" aria-label="Tema">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([v,t])=>`<button type="button" data-act="theme" data-v="${v}" aria-pressed="${th===v}">${t}</button>`).join('')}</div>
+    <p class="lbl2" style="margin-top:18px">Cor de destaque</p>
+    <div class="swatches" role="group" aria-label="Cor de destaque">${Object.entries(LOOKS).map(([k,[t,col]])=>`<button type="button" class="sw" data-act="accent" data-v="${k}" style="background:${col}" aria-label="${t}" aria-pressed="${ac===k}"></button>`).join('')}</div></section>`;
+  const rl=(S.cfg.rems||[]).length;
+  h+=`<p class="gh">Personalizar</p>`;
+  h+=acc('drem',S.remOpen||!!S.remDraft||(S.remJust||[]).length>0,'sino','#E8833A','Lembretes no iPhone',rl?`${rl} ${rl===1?'ativo':'ativos'}`:'Avisos mensais no Calendário',
+    remPanel()+`<details style="margin-top:14px"><summary class="sum">Prefere fazer à mão no app Lembretes?</summary><p class="hint" style="margin-top:8px">Crie um <b>lembrete</b> (no app Lembretes, não no Calendário), um passo de cada vez.</p>${remHtml()}</details>`);
   const row=(k,tipo)=>`<div class="rn"><div><small>${tipo}</small><input type="text" maxlength="24" data-ren="${esc(k.id)}" value="${esc(k.n)}" aria-label="Nome da categoria ${esc(k.n)}" autocomplete="off"></div>
     ${k.k?`<button class="ghost danger" data-act="delcat" data-id="${esc(k.id)}">Excluir</button>`:'<span></span>'}</div>`;
-  h+=`<section class="card"><details id="dnames"${S.namesOpen?' open':''}><summary class="sum">Nomes das categorias</summary><p class="hint" style="margin:10px 0 8px">Renomeie qualquer categoria ou crie as suas. Apagar o nome volta ao original.</p>`+
+  h+=acc('dnames',S.namesOpen,'tag','#3B82C4','Nomes das categorias','Renomeie ou crie as suas',
+    `<p class="hint" style="margin:0 0 8px">Apagar o nome volta ao original.</p>`+
     allCats('e').map(k=>row(k,k.g==='need'?'Gasto · necessidade':'Gasto · desejo')).join('')+
     allCats('i').map(k=>row(k,'Entrada')).join('')+
     allCats('v').map(k=>row(k,'Investimento')).join('')+
     `<div class="novacat"><label class="hint" for="ncn">Nova categoria</label>
       <input id="ncn" type="text" maxlength="24" placeholder="Ex.: Pets, Viagem, Freelance" autocomplete="off">
       <select id="ncg" aria-label="Tipo da nova categoria"><option value="need">Gasto · necessidade</option><option value="want">Gasto · desejo</option><option value="in">Entrada</option><option value="inv">Investimento</option></select>
-      <button class="primary" data-act="addcat">Adicionar categoria</button></div></details></section>`;
-  h+=installCard();
+      <button class="primary" data-act="addcat">Adicionar categoria</button></div>`);
+  h+=`<p class="gh">Dados e app</p>`;
   h+=backupCard();
-  const n=S.tx.length;
-  h+=`<section class="card"><h2>Recomeçar do zero</h2><p class="hint" style="margin-bottom:12px">Errou no começo ou quer registrar tudo de novo? Apague e comece limpo.</p>`;
-  if(S.confirm==='mes')h+=`<p style="margin-bottom:12px"><b>Apagar ${n} ${n===1?'lançamento':'lançamentos'} de ${esc(monthLabel())}?</b> Você poderá desfazer logo em seguida.</p>
-    <div class="acts2"><button class="ghost danger" data-act="wipemes">Sim, apagar o mês</button><button class="ghost" data-act="noask">Cancelar</button></div>`;
-  else if(S.confirm==='tudo')h+=`<p style="margin-bottom:12px"><b>Apagar tudo?</b> Isso remove os lançamentos de todos os meses, as metas, os limites e os nomes de categorias que você criou. <b>Não dá para desfazer.</b></p>
-    <div class="acts2"><button class="ghost danger" data-act="wipeall">Sim, apagar tudo</button><button class="ghost" data-act="noask">Cancelar</button></div>`;
-  else h+=`<div class="acts2"><button class="ghost" data-act="ask" data-w="mes"${n?'':' disabled'}>Apagar lançamentos deste mês</button><button class="ghost danger" data-act="ask" data-w="tudo">Apagar tudo e recomeçar</button></div>`;
-  h+=`</section>`;
+  h+=installCard();
+  const wipe=`<p class="hint" style="margin-bottom:12px">Errou no começo ou quer registrar tudo de novo? Apague e comece limpo.</p>`+(
+    S.confirm==='mes'?`<p style="margin-bottom:12px"><b>Apagar ${n} ${n===1?'lançamento':'lançamentos'} de ${esc(monthLabel())}?</b> Você poderá desfazer logo em seguida.</p>
+      <div class="acts2"><button class="ghost danger" data-act="wipemes">Sim, apagar o mês</button><button class="ghost" data-act="noask">Cancelar</button></div>`
+    :S.confirm==='tudo'?`<p style="margin-bottom:12px"><b>Apagar tudo?</b> Isso remove os lançamentos de todos os meses, as metas, os limites e os nomes de categorias que você criou. <b>Não dá para desfazer.</b></p>
+      <div class="acts2"><button class="ghost danger" data-act="wipeall">Sim, apagar tudo</button><button class="ghost" data-act="noask">Cancelar</button></div>`
+    :`<div class="acts2"><button class="ghost" data-act="ask" data-w="mes"${n?'':' disabled'}>Apagar lançamentos deste mês</button><button class="ghost danger" data-act="ask" data-w="tudo">Apagar tudo e recomeçar</button></div>`);
+  h+=acc('dwipe',S.wipeOpen||!!S.confirm,'lixo','#C4472F','Recomeçar do zero','Apagar lançamentos',wipe);
+  h+=`<p class="foot">Meu Bolso · versão <span id="appv">—</span></p>`;
   return h;
 }
 
@@ -1419,6 +1456,7 @@ function render(){
   const c=calc(S.tx),p=calc(S.prevTx);
   main.innerHTML=S.tab==='resumo'?vResumo(c,p):S.tab==='extrato'?vExtrato():S.tab==='metas'?vMetas(c):S.tab==='ajustes'?vAjustes(c):vDicas(c,p);
   $('.fab').hidden=S.tab==='ajustes';
+  if(S.tab==='ajustes')appVer();
 }
 
 /* ---------- abas: pílula deslizante e transição do conteúdo ---------- */
@@ -1808,7 +1846,7 @@ document.addEventListener('submit',e=>{
   if(!n){$('#nmerr').textContent='Digite seu nome para entrar.';$('#nm').focus();return}
   S.cfg={...S.cfg,name:n};S.pendRem=true;saveCfg();render();window.scrollTo(0,0);
 });
-document.addEventListener('toggle',e=>{if(e.target.id==='dnames')S.namesOpen=e.target.open},true);
+document.addEventListener('toggle',e=>{const k={dnames:'namesOpen',drem:'remOpen',dwipe:'wipeOpen'}[e.target.id];if(k)S[k]=e.target.open},true);
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('#mwin')&&!$('#mwin').hidden)closeMonthWin();else if(!$('#year').hidden)closeYear();else if(!$('#sheet').hidden)dismissSheet()});
 document.addEventListener('input',e=>{
   if(e.target.id==='amt'||(e.target.classList&&e.target.classList.contains('moeda'))){
@@ -1920,10 +1958,10 @@ function backupData(){
   return o;
 }
 function backupCard(){
-  return `<section class="card"><h2>Backup dos dados</h2>
-    <p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
+  return acc('dbak',false,'baixar','#2E9E5B','Backup dos dados','Salvar ou restaurar uma cópia',
+    `<p class="hint" style="margin-bottom:12px">Seus dados ficam só neste aparelho. Salve uma cópia de vez em quando, no app Arquivos ou no iCloud Drive, para não perder tudo se trocar de celular ou limpar os dados do Safari.</p>
     <div class="acts2"><button class="ghost" data-act="export">Salvar backup</button><button class="ghost" data-act="import">Restaurar backup</button></div>
-    <input type="file" id="impfile" accept="application/json,.json" hidden><p class="hint" style="margin-top:10px">Versão do app: 21</p></section>`;
+    <input type="file" id="impfile" accept="application/json,.json" hidden>`);
 }
 async function doExport(){
   const name='meu-bolso-backup-'+todayStr()+'.json',blob=new Blob([JSON.stringify(backupData())],{type:'application/json'});
@@ -2214,7 +2252,8 @@ function vInstall(){
 }
 function installCard(){
   if(isStandalone())return '';
-  return `<section class="card"><h2>Instalar o app</h2><p class="hint">Abra o Meu Bolso pelo ícone da Tela de Início para usar sem internet e receber notificações.</p><button class="primary full" style="margin-top:12px" data-act="installguide">Ver como instalar</button></section>`;
+  return acc('dinst',false,'fone','#7C5CFF','Instalar o app','Use sem internet pelo ícone',
+    `<p class="hint">Abra o Meu Bolso pelo ícone da Tela de Início para usar sem internet e receber notificações.</p><button class="primary full" style="margin-top:12px" data-act="installguide">Ver como instalar</button>`);
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst.deferred=e;if(S.install)render()});
 window.addEventListener('appinstalled',()=>{inst.deferred=null;toast('Instalado! Abra o Meu Bolso pelo ícone.')});
