@@ -590,9 +590,9 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 /* acabamento profissional: folha de registro */
 .sheet label{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;margin-top:6px}
 .sheet label.chk{text-transform:none;letter-spacing:0;font-size:.95rem}
-.sheet[data-kind="e"] .seg button[aria-pressed="true"]{color:var(--out)}
-.sheet[data-kind="i"] .seg button[aria-pressed="true"]{color:var(--pos)}
-.sheet[data-kind="v"] .seg button[aria-pressed="true"]{color:var(--need)}
+.sheet[data-tipo="e"] .seg button[aria-pressed="true"]{color:var(--out)}
+.sheet[data-tipo="i"] .seg button[aria-pressed="true"]{color:var(--pos)}
+.sheet[data-tipo="v"] .seg button[aria-pressed="true"]{color:var(--need)}
 .sheet .seg.two button[aria-pressed="true"]{color:var(--ink)}
 .amt{justify-content:space-between;align-items:center;background:var(--fill);border:0;border-radius:18px;padding:14px 16px;box-shadow:inset 0 0 0 1.5px transparent;transition:box-shadow .2s ease}
 .amt:focus-within{box-shadow:inset 0 0 0 1.5px var(--accent)}
@@ -1850,7 +1850,7 @@ function paintForm(){
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===S.kind)));
   const cats=allCats(S.kind);if(!cats.some(c=>c.id===S.cat))S.cat=cats[0].id;
   $('#catchips').innerHTML=cats.map(c=>`<button type="button" class="ctile" data-act="cat" data-c="${c.id}" aria-pressed="${c.id===S.cat}">${catIco(c.id,c.n)}<span>${esc(c.n)}</span></button>`).join('');
-  $('#form').dataset.kind=S.kind;
+  $('#form').dataset.tipo=S.kind;
   if(!S.editId)$('#savebtn').textContent={e:'Salvar gasto',i:'Salvar entrada',v:'Salvar investimento'}[S.kind];
   paintDescIco();paintSugs();paintCards();
   $('#parcbox').hidden=S.kind!=='e';
@@ -1983,8 +1983,8 @@ document.addEventListener('click',e=>{
   else if(a==='cat'){S.cat=el.dataset.c;S.catTouched=true;paintForm()}
   else if(a==='card'){S.card=el.dataset.k||null;paintCards()}
   else if(a==='cardnew'){const w=$('#cardnew');w.hidden=!w.hidden;if(!w.hidden)setTimeout(()=>$('#cnn').focus({preventScroll:false}),30)}
-  else if(a==='cardcreate'){const k=addCard($('#cnn').value);if(k){S.card=k.id;$('#cnn').value='';$('#cardnew').hidden=true;paintCards();toast('Cartão criado.')}}
-  else if(a==='kadd'){const k=addCard($('#knn').value);if(k){S.cardsOpen=true;render();toast('Cartão criado.')}}
+  else if(a==='cardcreate'){if(!$('#cnn').value.trim()){toast('Digite o nome do cartão.');$('#cnn').focus();return}const k=addCard($('#cnn').value);if(k){S.card=k.id;$('#cnn').value='';$('#cardnew').hidden=true;paintCards();toast('Cartão criado.')}}
+  else if(a==='kadd'){if(!$('#knn').value.trim()){toast('Digite o nome do cartão.');$('#knn').focus();return}const k=addCard($('#knn').value);if(k){S.cardsOpen=true;render();toast('Cartão criado.')}}
   else if(a==='kcolor'){const id=el.dataset.k;const P=CARD_PRESETS[+el.dataset.i];S.cfg={...S.cfg,cards:S.cfg.cards.map(c=>c.id===id?{...c,c:P[1],f:P[2]}:c)};saveCfg();S.cardsOpen=true;render()}
   else if(a==='kdel'){
     const id=el.dataset.id,old=S.cfg.cards;
