@@ -47,6 +47,6 @@ Se o `index.html` mudar, abra o arquivo `sw.js`, troque `meu-bolso-v1` por `meu-
 
 ## 5. Dicas diárias de investimento (Calendário)
 
-Em **Ajustes > Dicas diárias de investimento**, escolha o horário (de 6h00 a 22h55, de 5 em 5 minutos) e toque em **Ativar no Calendário**. São 50 dicas, uma por dia, e o ciclo recomeça sozinho a cada 50 dias. Chegam como aviso do app Calendário, sem GitHub e sem segredos.
+Em **Ajustes > Dicas diárias de investimento**, escolha o horário (de 6h00 a 22h55, de 5 em 5 minutos) e toque em **Adicionar ao Calendário**, depois em **Adicionar Tudo** (de preferência num calendário seu chamado "Dicas"). São 50 dicas, uma por dia, e o ciclo recomeça sozinho a cada 50 dias. Os eventos são adicionados ao seu calendário (não é assinatura, porque o iPhone costuma ignorar alertas de calendários assinados) e chegam como aviso do app Calendário, sem GitHub e sem segredos.
 
 Os arquivos ficam em `l/dica-HHMM.ics` (um por horário). Para trocar as dicas, edite o texto nesses arquivos. Quem já assinou precisa cancelar a assinatura e ativar de novo para receber a mudança.
