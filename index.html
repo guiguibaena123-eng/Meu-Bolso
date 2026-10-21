@@ -635,7 +635,7 @@ input[type=text],input[type=date],input[type=number],select{border:0;background:
 ::selection{background:var(--accent-soft,rgba(11,122,94,.18))}
 html{scroll-padding-top:72px}
 button,.chip,.ctile,.tabs{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-input,select,textarea{-webkit-appearance:none;appearance:none}
+input[type=text],input[type=search],input[type=date],input[type=number],select,textarea{-webkit-appearance:none;appearance:none}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
 #toast{max-width:calc(100vw - 32px)}
 .card,.mhero,.hero,.aviso2{transition:opacity .2s ease}
@@ -643,6 +643,13 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .lim,.item,.cat{-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 @media (min-width:600px){.app{max-width:560px}}
+.mhero .slider{-webkit-appearance:none;appearance:none;display:block;width:100%;height:30px;margin:10px 0 4px;background:transparent;cursor:pointer;touch-action:pan-y}
+.mhero .slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,#fff var(--pv,40%),rgba(255,255,255,.28) var(--pv,40%))}
+.mhero .slider::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.28)}
+.mhero .slider::-moz-range-progress{height:6px;border-radius:3px;background:#fff}
+.mhero .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-10px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.mhero .slider::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.mhero .slider:focus-visible{outline:2px solid #fff;outline-offset:4px;border-radius:6px}
 </style>
 
 </head>
@@ -1368,7 +1375,7 @@ function vMetas(c){
     <p class="msub">${goal>0?(ok?`Meta de ${brl(goal)} batida`:`Faltam ${brl(goal-got)} para ${brl(goal)}`):(c.inc>0?'Sem meta de economia':'Registre sua renda para ver a meta')}</p></div></div>
     <p class="mlbl">Guardar <b><span id="pctv">${pc}</span>%</b> da renda</p>
     <div class="chips" role="group" aria-label="Percentual da renda a guardar">${[5,10,15,20,30].map(v=>`<button class="chip" data-act="savepct" data-v="${v}" aria-pressed="${pc===v}">${v}%</button>`).join('')}</div>
-    <input class="slider" id="sl" type="range" min="0" max="50" step="5" value="${pc}" aria-label="Percentual da renda a guardar">
+    <input class="slider" id="sl" type="range" min="0" max="50" step="5" value="${pc}" style="--pv:${pc*2}%" aria-label="Percentual da renda a guardar">
     <p class="msub" id="pcth">${c.inc>0?`Em ${esc(monthLabel().toLowerCase())}, isso são ${brl(goal)}.`:'Registre sua renda do mês para ver o valor em reais.'}</p></section>
     <details class="card tipd"><summary><span class="ic info" aria-hidden="true">i</span><b>Quanto guardar é o ideal?</b></summary><div class="tb"><p>Referência comum: 20% ou mais. Se hoje está difícil, comece com 5% ou 10% e suba aos poucos. Investimentos registrados e o que sobra na conta contam para a meta.</p></div></details>`;
   const cats=allCats('e').map(k=>({k,v:c.by[k.id]||0,lim:S.cfg.limits[k.id]}));
@@ -1978,7 +1985,7 @@ document.addEventListener('input',e=>{
   else if(e.target.id==='amt')paintParc();
   if(e.target.id==='sl'){
     const v=+e.target.value,c=calc(S.tx);
-    $('#pctv').textContent=v;
+    $('#pctv').textContent=v;e.target.style.setProperty('--pv',v*2+'%');
     $('#pcth').textContent=c.inc>0?`Em ${monthLabel().toLowerCase()}, isso são ${brl(c.inc*v/100)}.`:'Registre sua renda do mês para ver o valor em reais.';
   }
 });
