@@ -153,6 +153,27 @@ select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:
 input[type=text],input[type=date],input[type=number]{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-height:46px}
 input.moeda{text-align:right}
 
+/* metas e dicas interativas */
+.chips .chip{flex:none}
+.lim{display:block;padding:0;border-top:1px solid var(--line)}
+.lim:first-of-type{border-top:0}
+.limhead{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px 0;min-height:56px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.limhead .n{flex:1;min-width:0}
+.limhead .n b{font-weight:600;display:block}
+.limhead .n small{display:block;color:var(--muted)}
+.limhead .car,.tipd summary::after{content:'';flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+.lim.open .car,.tipd[open] summary::after{transform:rotate(-135deg)}
+.limed{padding:2px 0 14px}
+.outras{margin-top:4px}
+.tipd{padding:0;margin-top:10px}
+.tipd summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;min-height:54px;cursor:pointer}
+.tipd summary::-webkit-details-marker{display:none}
+.tipd summary b{flex:1;font-weight:600;font-family:var(--font-display);letter-spacing:-.01em;line-height:1.3}
+.tipd summary .tag{flex:none;margin:0;font-size:.68rem}
+.tipd .tb{padding:0 16px 16px}
+.tipd .tb p{color:var(--muted);font-size:.96rem}
+.ghost.sm{min-height:40px;padding:8px 14px;font-size:.92rem}
+
 /* dicas */
 .dica{margin-top:12px}
 .dica .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:8px}
@@ -1059,18 +1080,33 @@ function vExtrato(){
 }
 
 function vMetas(c){
-  const goal=c.inc*S.cfg.savePct/100;
+  const pc=S.cfg.savePct,goal=c.inc*pc/100,got=c.saved,ok=goal>0&&got>=goal;
   let h=`<section class="card"><h2>Quanto guardar por mês</h2>
-    <p style="font-size:1.8rem;font-family:var(--font-display);font-weight:700;letter-spacing:-.02em"><span id="pctv">${S.cfg.savePct}</span>% da renda</p>
-    <input class="slider" id="sl" type="range" min="0" max="50" step="5" value="${S.cfg.savePct}" aria-label="Percentual da renda a guardar">
-    <p class="hint" id="pcth">${c.inc>0?`Em ${esc(monthLabel().toLowerCase())}, isso são ${brl(goal)}.`:'Registre sua renda do mês para ver o valor em reais.'}</p>
-    <p class="hint" style="margin-top:8px">Referência comum: 20% ou mais. Se hoje está difícil, comece com 5% ou 10% e suba aos poucos. O que você registra como Investimento e o que sobra na conta contam para a meta.</p></section>
-    <section class="card"><h2>Limite por categoria</h2><p class="hint" style="margin-bottom:6px">Defina um teto mensal onde você costuma passar do ponto. Deixe em branco para não ter limite.</p>`;
-  h+=allCats('e').map(k=>{
-    const v=c.by[k.id]||0,lim=S.cfg.limits[k.id];
-    return `<div class="lim"><div class="n"><b style="font-weight:600">${esc(k.n)}</b><small>gasto: ${brl(v)}${lim?` · restam ${lim-v>=0?brl(lim-v):'0,00 (passou '+brl(v-lim)+')'}`:''}</small>
-      ${lim?`<div class="track"><i class="${v>lim?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></div>`:''}</div>
-      <input class="moeda" type="text" inputmode="numeric" data-lim="${k.id}" placeholder="sem limite" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`}).join('')+`</section>`;
+    <div class="chips" role="group" aria-label="Percentual da renda a guardar" style="margin:10px 0 0">${[5,10,15,20,30].map(v=>`<button class="chip" data-act="savepct" data-v="${v}" aria-pressed="${pc===v}">${v}%</button>`).join('')}</div>
+    <input class="slider" id="sl" type="range" min="0" max="50" step="5" value="${pc}" aria-label="Percentual da renda a guardar">
+    <p style="font-size:1.5rem;font-family:var(--font-display);font-weight:700;letter-spacing:-.02em"><span id="pctv">${pc}</span>% da renda</p>`;
+  if(c.inc>0&&goal>0){
+    h+=`<div class="track" style="margin-top:12px"><i style="width:${Math.min(100,pct(got,goal))}%"></i></div>
+      <p class="hint" id="pcth" style="margin-top:8px">${ok?`Meta batida: você guardou ${brl(got)} de ${brl(goal)}.`:`Guardado ${brl(got)} de ${brl(goal)}. Faltam ${brl(goal-got)}.`}</p>`;
+  }else h+=`<p class="hint" id="pcth" style="margin-top:8px">${c.inc>0?'Sem meta de economia neste mês.':'Registre sua renda do mês para ver o valor em reais.'}</p>`;
+  h+=`<details style="margin-top:12px"><summary class="sum">Quanto é o ideal?</summary><p class="hint" style="margin-top:8px">Referência comum: 20% ou mais. Se hoje está difícil, comece com 5% ou 10% e suba aos poucos. Investimentos registrados e o que sobra na conta contam para a meta.</p></details></section>`;
+  const cats=allCats('e').map(k=>({k,v:c.by[k.id]||0,lim:S.cfg.limits[k.id]}));
+  const row=({k,v,lim})=>{
+    const open=S.limOpen===k.id,over=lim&&v>lim;
+    let r=`<div class="lim${open?' open':''}"><button type="button" class="limhead" data-act="limopen" data-id="${esc(k.id)}" aria-expanded="${open}">
+      <span class="n"><b>${esc(k.n)}</b><small>${lim?(over?`passou ${brl(v-lim)} · limite ${brl(lim)}`:`${brl(v)} de ${brl(lim)} · restam ${brl(lim-v)}`):(v>0?`gasto ${brl(v)} · sem limite`:'sem gasto · sem limite')}</small>
+      ${lim?`<span class="track"><i class="${over?'over':''}" style="width:${Math.min(100,pct(v,lim))}%"></i></span>`:''}</span><span class="car" aria-hidden="true"></span></button>`;
+    if(open){
+      const sug=[...new Set([v>0?Math.ceil(v*1.1/50)*50:0,100,200,300,500,1000].filter(x=>x>0))].slice(0,5);
+      r+=`<div class="limed"><div class="chips" style="margin:0 0 10px">${sug.map(x=>`<button class="chip" data-act="limset" data-id="${esc(k.id)}" data-v="${x}" aria-pressed="${lim===x}">${brl(x).replace(/,00$/,'')}</button>`).join('')}${lim?`<button class="chip" data-act="limset" data-id="${esc(k.id)}" data-v="0">Sem limite</button>`:''}</div>
+        <input class="moeda" type="text" inputmode="numeric" data-lim="${esc(k.id)}" placeholder="Outro valor" value="${lim?moneyField(lim):''}" aria-label="Limite de ${esc(k.n)} em reais" autocomplete="off"></div>`;
+    }
+    return r+`</div>`;
+  };
+  const used=cats.filter(x=>x.lim||x.v>0).sort((a,b)=>(b.lim?1:0)-(a.lim?1:0)||b.v-a.v),rest=cats.filter(x=>!x.lim&&!x.v);
+  h+=`<section class="card"><h2>Limite por categoria</h2><p class="hint" style="margin-bottom:6px">Toque numa categoria para definir um teto mensal onde você costuma passar do ponto.</p>`+
+    (used.length?used.map(row).join(''):'<p class="hint" style="margin-top:8px">Registre gastos para ver as categorias aqui.</p>')+
+    (rest.length?`<details class="outras"${rest.some(x=>x.k.id===S.limOpen)?' open':''}><summary class="sum" style="margin-top:10px">Outras categorias (${rest.length})</summary>${rest.map(row).join('')}</details>`:'')+`</section>`;
   return h;
 }
 
@@ -1144,21 +1180,29 @@ function tips(c,p){
   return out;
 }
 const TAG={alert:'Alerta',warn:'Atenção',ok:'Bom',info:'Dica'};
+const actFor=t=>/renda|investimento|Poucos|Comece/.test(t.t)?['add','Registrar agora']:/meta|limite|Necessidades|Desejos/i.test(t.t)?['metas','Ajustar metas e limites']:null;
 function vDicas(c,p){
-  let h='';
-  for(const t of tips(c,p))h+=`<article class="card dica"><span class="tag ${t.lv}">${TAG[t.lv]}</span><h3>${esc(t.t)}</h3><p>${esc(t.b)}</p></article>`;
-  if(isCurrent()&&S.tx.length)h+=vPrev(c,p);
+  const list=tips(c,p),n={alert:0,warn:0};list.forEach(t=>{if(n[t.lv]!==undefined)n[t.lv]++});
+  const first=list.findIndex(t=>t.lv==='alert'||t.lv==='warn'),ml=esc(monthLabel().toLowerCase());
+  let h=`<section class="card"><h2>${n.alert?'Precisa de atenção':n.warn?'Quase lá':'Tudo em ordem'}</h2>
+    <p class="hint" style="margin-top:4px">${n.alert||n.warn?[n.alert?`${n.alert} ${n.alert>1?'alertas':'alerta'}`:'',n.warn?`${n.warn} ${n.warn>1?'pontos de atenção':'ponto de atenção'}`:''].filter(Boolean).join(' e ')+' em '+ml+'. Toque numa dica para ver o que fazer.':'Nada urgente em '+ml+'. Veja as dicas abaixo para ir além.'}</p></section>`;
+  list.forEach((t,i)=>{
+    const a=actFor(t);
+    h+=`<details class="card tipd"${i===(first<0?0:first)?' open':''}><summary><span class="tag ${t.lv}">${TAG[t.lv]}</span><b>${esc(t.t)}</b></summary>
+      <div class="tb"><p>${esc(t.b)}</p>${a?`<button class="ghost sm" data-act="${a[0]==='add'?'add':'gotab'}" data-tab-to="${a[0]}" style="margin-top:12px">${a[1]}</button>`:''}</div></details>`;
+  });
+  if(isCurrent()&&S.tx.length)h+=`<details class="card tipd"><summary><span class="tag info">Próximo mês</span><b>O que esperar do mês que vem</b></summary><div class="tb" style="padding:0 0 4px">${vPrev(c,p).replace('<section class="card">','<div style="padding:0 16px 12px">').replace(/<\/section>$/,'</div>')}</div></details>`;
   if(S.ai){
     h+=`<section class="card dica"><h3>Dicas sob medida com IA</h3><p>O Claude lê o resumo do seu mês e sugere ações específicas para você.</p>
       <div style="margin-top:12px"><button class="primary" data-act="ai" ${S.aiBusy?'disabled':''}>${S.aiBusy?'Analisando…':(S.aiText?'Gerar de novo':'Pedir dicas para o meu mês')}</button></div>
       <div class="ia-out" id="iaout" aria-live="polite">${esc(S.aiText)}</div></section>`;
   }
-  h+=`<p class="sec">Hábitos que funcionam</p>`+[
+  h+=`<details class="card tipd"><summary><span class="tag ok">Hábitos</span><b>Hábitos que funcionam</b></summary><div class="tb">`+[
     ['Pague-se primeiro','Assim que o salário cair, transfira a parte da economia. O que sobra é para gastar, não o contrário.'],
     ['Regra das 24 horas','Para compras acima de R$ 150 que não são urgentes, espere um dia. Muita vontade passa sozinha.'],
     ['Automatize o que importa','Programe a transferência para a reserva e o pagamento das contas fixas. Menos decisões, menos esquecimentos.'],
     ['Cinco minutos por semana','Abra o Extrato todo domingo, confira os gastos e ajuste os limites. Isso vale mais do que uma planilha perfeita uma vez por ano.']
-  ].map(([t,b])=>`<article class="card dica"><h3>${t}</h3><p>${b}</p></article>`).join('');
+  ].map(([t,b])=>`<p style="margin-top:10px"><b style="color:var(--ink)">${t}.</b> ${b}</p>`).join('')+`</div></details>`;
   return h;
 }
 
@@ -1526,6 +1570,14 @@ document.addEventListener('click',e=>{
   }
   else if(a==='undo'){if(S.undoFn){const f=S.undoFn;S.undoFn=null;f();$('#toast').hidden=true}else if(S.undo){S.tx=[...S.tx,S.undo];S.undo=null;saveMonth();render();$('#toast').hidden=true}}
   else if(a==='ai')askAI();
+  else if(a==='gotab')goTab(el.dataset.tabTo);
+  else if(a==='savepct'){S.cfg={...S.cfg,savePct:+el.dataset.v};saveCfg();render()}
+  else if(a==='limopen'){S.limOpen=S.limOpen===el.dataset.id?null:el.dataset.id;render()}
+  else if(a==='limset'){
+    const limits={...S.cfg.limits},v=+el.dataset.v;
+    if(v>0)limits[el.dataset.id]=v;else delete limits[el.dataset.id];
+    S.cfg={...S.cfg,limits};S.limOpen=null;saveCfg();render();toast(v>0?'Limite definido.':'Limite removido.');
+  }
   else if(a==='year'){if(S.tab!=='ajustes')openYear()}
   else if(a==='yclose')closeYear();
   else if(a==='yprev'||a==='ynext'){S.year+=a==='yprev'?-1:1;paintYear()}
@@ -1599,7 +1651,7 @@ document.addEventListener('change',e=>{
   else if(t.dataset&&t.dataset.lim){
     const v=rnd(parseMoney(t.value)),limits={...S.cfg.limits};
     if(v>0&&v<=1e9)limits[t.dataset.lim]=v;else delete limits[t.dataset.lim];
-    S.cfg={...S.cfg,limits};saveCfg();render();
+    S.cfg={...S.cfg,limits};S.limOpen=null;saveCfg();render();
   }
 });
 
